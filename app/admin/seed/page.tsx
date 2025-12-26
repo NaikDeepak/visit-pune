@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { fetchPlacesFromSerpApi } from "@/app/actions/seed-places";
+import { classifyQuery } from "@/app/actions/classify-category";
 import { db } from "@/app/lib/firebase";
 import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 import { Loader2, Database, CheckCircle, AlertTriangle } from "lucide-react";
@@ -29,6 +30,11 @@ export default function SeederPage() {
             const places = res.data;
             setLogs(prev => [`Fetched ${places.length} places. Writing to Firestore...`, ...prev]);
 
+            // Heuristic first (client-side, fast)
+            const heuristic = inferCategory(query);
+            // AI Fallback (server-side, smart)
+            const finalCategory = await classifyQuery(query, heuristic);
+
             let count = 0;
             for (const p of places) {
                 // Transform to our Schema
@@ -46,7 +52,7 @@ export default function SeederPage() {
                     },
                     image_url: p.image_url,
                     estimated_time: "2 hours", // Default
-                    category: inferCategory(query) as PlaceCategory
+                    category: finalCategory
                 };
 
                 // Write to Firestore "places" collection
