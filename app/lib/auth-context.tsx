@@ -36,7 +36,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(auth, provider);
+            const idToken = await result.user.getIdToken();
+
+            // Send ID token to server to create secure session cookie
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error("Server login failed:", error);
+                await firebaseSignOut(auth);
+                throw new Error(error.error || "Login failed");
+            }
+
         } catch (error) {
             console.error("Sign in error:", error);
             throw error;
@@ -45,7 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signOut = async () => {
         try {
+            // Call server to clear httpOnly cookie
+            await fetch("/api/auth/logout", { method: "POST" });
             await firebaseSignOut(auth);
+
         } catch (error) {
             console.error("Sign out error:", error);
             throw error;
