@@ -2,11 +2,24 @@
 
 import Link from "next/link";
 import { Menu, X, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { cn } from "@/app/lib/utils";
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+    const pathname = usePathname();
+    const isHome = pathname === "/";
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     const navLinks = [
         { name: "Explore", href: "/explore" },
@@ -15,17 +28,37 @@ export function Navbar() {
         { name: "Community", href: "/community" },
     ];
 
+    // Determine styles based on state
+    // Home + Top: Transparent, White Text
+    // Home + Scrolled: Glass, Dark Text
+    // Other Pages: Glass, Dark Text
+    const isTransparent = isHome && !scrolled;
+
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50">
-            <div className="mx-auto px-6 py-4">
-                <div className="glass rounded-2xl flex items-center justify-between px-6 py-3 shadow-lg shadow-black/5">
+        <nav className={cn(
+            "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+            scrolled ? "py-2" : "py-4"
+        )}>
+            <div className="mx-auto px-4 max-w-7xl">
+                <div className={cn(
+                    "rounded-full flex items-center justify-between px-6 py-3 transition-all duration-300",
+                    isTransparent
+                        ? "bg-transparent border-transparent"
+                        : "bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg shadow-black/5"
+                )}>
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group">
-                        <div className="bg-peshwa text-white p-1.5 rounded-lg group-hover:rotate-12 transition-transform">
+                        <div className={cn(
+                            "p-1.5 rounded-lg transition-colors group-hover:rotate-12",
+                            isTransparent ? "bg-white text-peshwa" : "bg-peshwa text-white"
+                        )}>
                             <MapPin size={20} fill="currentColor" />
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-foreground">
-                            Visit<span className="text-peshwa">Pune</span>
+                        <span className={cn(
+                            "font-bold text-xl tracking-tight transition-colors",
+                            isTransparent ? "text-white" : "text-foreground"
+                        )}>
+                            Visit<span className={cn(isTransparent ? "text-white/90" : "text-peshwa")}>Pune</span>
                         </span>
                     </Link>
 
@@ -35,12 +68,22 @@ export function Navbar() {
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                className="text-sm font-medium text-muted-foreground hover:text-peshwa transition-colors"
+                                className={cn(
+                                    "text-sm font-medium transition-colors hover:scale-105 transform",
+                                    isTransparent
+                                        ? "text-white/90 hover:text-white"
+                                        : "text-muted-foreground hover:text-peshwa"
+                                )}
                             >
                                 {link.name}
                             </Link>
                         ))}
-                        <button className="bg-foreground text-background px-4 py-2 rounded-xl text-sm font-semibold hover:bg-peshwa hover:text-white transition-colors">
+                        <button className={cn(
+                            "px-5 py-2 rounded-full text-sm font-semibold transition-all hover:shadow-lg",
+                            isTransparent
+                                ? "bg-white text-peshwa hover:bg-white/90"
+                                : "bg-foreground text-background hover:bg-peshwa hover:text-white"
+                        )}>
                             Sign In
                         </button>
                     </div>
@@ -48,7 +91,10 @@ export function Navbar() {
                     {/* Mobile Toggle */}
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="md:hidden text-foreground p-1"
+                        className={cn(
+                            "md:hidden p-1 transition-colors",
+                            isTransparent ? "text-white" : "text-foreground"
+                        )}
                     >
                         {isOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
@@ -62,21 +108,21 @@ export function Navbar() {
                         initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className="absolute top-20 left-6 right-6 md:hidden"
+                        className="absolute top-20 left-4 right-4 md:hidden"
                     >
-                        <div className="glass rounded-2xl p-4 flex flex-col gap-2 shadow-2xl">
+                        <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-4 flex flex-col gap-2 shadow-2xl border border-white/20">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
                                     href={link.href}
                                     onClick={() => setIsOpen(false)}
-                                    className="p-3 hover:bg-accent rounded-xl text-sm font-medium transition-colors"
+                                    className="p-3 hover:bg-peshwa/5 rounded-2xl text-sm font-medium transition-colors text-foreground"
                                 >
                                     {link.name}
                                 </Link>
                             ))}
                             <div className="h-px bg-border my-2" />
-                            <button className="w-full bg-peshwa text-white py-3 rounded-xl font-semibold">
+                            <button className="w-full bg-peshwa text-white py-3 rounded-2xl font-semibold shadow-lg shadow-peshwa/20">
                                 Sign In
                             </button>
                         </div>
