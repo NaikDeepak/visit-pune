@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { clsx } from "clsx";
 
+import { sharedMetadata } from "./shared-metadata";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,8 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VisitPune.in | AI-Powered City Concierge",
-  description: "Experience Pune purely by Vibe. The Oxford of the East, reimagined with AI.",
+  ...sharedMetadata,
 };
 
 export default function RootLayout({

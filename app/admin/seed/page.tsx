@@ -88,6 +88,28 @@ export default function SeederPage() {
                 <p className="text-xs text-muted-foreground mt-2">
                     Fetches 20 results via SerpApi (uses 1 credit). Writes to `places` collection.
                 </p>
+
+                <div className="mt-6">
+                    <p className="text-sm font-medium mb-3 text-muted-foreground">Quick Seed (Click to populate):</p>
+                    <div className="flex flex-wrap gap-2">
+                        {[
+                            "Historical places in Pune",
+                            "Best Misal Pav in Pune",
+                            "Popular trekking spots near Pune",
+                            "Best pubs and breweries in Koregaon Park",
+                            "Museums and Art Galleries in Pune",
+                            "Famous Ganpati Temples in Pune"
+                        ].map((q) => (
+                            <button
+                                key={q}
+                                onClick={() => setQuery(q)}
+                                className="text-xs border border-peshwa/20 bg-peshwa/5 hover:bg-peshwa/10 text-peshwa px-3 py-1.5 rounded-full transition-colors"
+                            >
+                                {q}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <div className="bg-black/90 text-green-400 font-mono text-sm p-4 rounded-xl h-64 overflow-y-auto">
