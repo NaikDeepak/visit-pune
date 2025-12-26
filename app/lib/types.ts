@@ -11,7 +11,21 @@ export interface Place {
     rating?: number;
     reviews?: number;
     estimated_time?: string; // "1 hour"
+    category?: PlaceCategory;
 }
+
+export type PlaceCategory =
+    | "history"
+    | "food"
+    | "nature"
+    | "nightlife"
+    | "books"
+    | "culture"
+    | "general";
+
+export const PLACE_CATEGORIES: PlaceCategory[] = [
+    "history", "food", "nature", "nightlife", "books", "culture", "general"
+];
 
 export interface ItineraryStop {
     place: Place;

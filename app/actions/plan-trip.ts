@@ -73,7 +73,7 @@ export async function generateItinerary(formData: FormData): Promise<{ data?: It
                 data.stops = [];
             }
             return { data: data as Itinerary };
-        } catch (e) {
+        } catch {
             console.error("JSON Parse Error", responseText);
             return { error: "AI returned invalid format. Please try again." };
         }
