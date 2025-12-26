@@ -3,10 +3,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Places: Everyone can read, only Authenticated users (Admins) can write
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'deep.naik@gmail.com';
+    }
+    
+    // Places: Everyone can read, only deep.naik@gmail.com can write
     match /places/{document} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // Default deny for everything else

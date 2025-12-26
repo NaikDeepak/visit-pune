@@ -4,6 +4,7 @@ import "./globals.css";
 import { clsx } from "clsx";
 
 import { sharedMetadata } from "./shared-metadata";
+import { AuthProvider } from "./lib/auth-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
           "antialiased min-h-screen flex flex-col"
         )}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
