@@ -4,6 +4,33 @@ import { ai } from "@/app/lib/gemini";
 import { PlaceCategory, PLACE_CATEGORIES } from "@/app/lib/types";
 
 /**
+ * Sanitizes user input to prevent prompt injection attacks.
+ * Removes or escapes characters that could manipulate the AI prompt.
+ */
+function sanitizeQuery(query: string): string {
+    // Limit length to prevent abuse
+    const maxLength = 200;
+    let sanitized = query.slice(0, maxLength);
+    
+    // Remove control characters and non-printable characters
+    sanitized = sanitized.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+    
+    // Escape quotes to prevent breaking out of prompt context
+    sanitized = sanitized.replace(/"/g, '\\"');
+    sanitized = sanitized.replace(/'/g, "\\'");
+    
+    // Remove potential prompt injection patterns
+    sanitized = sanitized.replace(/\n/g, ' ');
+    sanitized = sanitized.replace(/\r/g, ' ');
+    sanitized = sanitized.replace(/\t/g, ' ');
+    
+    // Collapse multiple spaces
+    sanitized = sanitized.replace(/\s+/g, ' ').trim();
+    
+    return sanitized;
+}
+
+/**
  * Classifies a search query into one of the strict PlaceCategory types.
  * Uses Gemini for semantic understanding if heuristics fail.
  */
@@ -13,14 +40,22 @@ export async function classifyQuery(query: string, heuristicResult: string): Pro
         return heuristicResult as PlaceCategory;
     }
 
-    // 2. Fallback to Gemini for semantic understanding
+    // 2. Sanitize input to prevent prompt injection
+    const sanitizedQuery = sanitizeQuery(query);
+    
+    // If query becomes empty after sanitization, return general
+    if (!sanitizedQuery) {
+        return "general";
+    }
+
+    // 3. Fallback to Gemini for semantic understanding
     try {
         const prompt = `
       You are a classifier for a Tourism Database.
       Classify the following user search query into exactly ONE of these categories:
       [${PLACE_CATEGORIES.map(c => `"${c}"`).join(", ")}]
 
-      Query: "${query}"
+      Query: "${sanitizedQuery}"
 
       Rules:
       - Return ONLY the category name as a plain string.
