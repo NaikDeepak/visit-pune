@@ -12,17 +12,12 @@ function sanitizeQuery(query: string): string {
     const maxLength = 200;
     let sanitized = query.slice(0, maxLength);
     
-    // Remove control characters and non-printable characters
-    sanitized = sanitized.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+    // Remove control characters and non-printable characters (includes \n, \r, \t)
+    sanitized = sanitized.replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
     
     // Escape quotes to prevent breaking out of prompt context
     sanitized = sanitized.replace(/"/g, '\\"');
     sanitized = sanitized.replace(/'/g, "\\'");
-    
-    // Remove potential prompt injection patterns
-    sanitized = sanitized.replace(/\n/g, ' ');
-    sanitized = sanitized.replace(/\r/g, ' ');
-    sanitized = sanitized.replace(/\t/g, ' ');
     
     // Collapse multiple spaces
     sanitized = sanitized.replace(/\s+/g, ' ').trim();
