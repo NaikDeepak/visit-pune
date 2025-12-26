@@ -15,6 +15,9 @@ function sanitizeQuery(query: string): string {
     // Remove control characters and non-printable characters (includes \n, \r, \t)
     sanitized = sanitized.replace(/[\x00-\x1F\x7F-\x9F]/g, ' ');
     
+    // Escape backslashes first to prevent escape sequence issues
+    sanitized = sanitized.replace(/\\/g, '\\\\');
+    
     // Escape quotes to prevent breaking out of prompt context
     sanitized = sanitized.replace(/"/g, '\\"');
     sanitized = sanitized.replace(/'/g, "\\'");
