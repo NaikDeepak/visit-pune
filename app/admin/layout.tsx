@@ -13,6 +13,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         // Redirect to login if not authenticated (except on login page)
+        // NOTE: This is a fallback client-side check for better UX.
+        // The PRIMARY security layer is the server-side 'proxy.ts' middleware which
+        // strictly blocks unauthorized requests before this layout is even rendered.
         if (!loading && !user && pathname !== "/admin/login") {
             router.push("/admin/login");
         }
