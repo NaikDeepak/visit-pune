@@ -11,8 +11,14 @@ export async function getPlaces(vibe?: string): Promise<{ data?: Place[]; error?
         // For now, we fetch top 20 and filter client side or let it be generic. 
         // In a real app, we would add 'tags' array to schema.
 
-        // Let's just fetch all (limit 50) for this MVP phase since we just seeded generic "Top places".
-        const q = query(placesRef, limit(50));
+        // Filter by category if provided
+        let q;
+        if (vibe) {
+            q = query(placesRef, where("category", "==", vibe), limit(50));
+        } else {
+            q = query(placesRef, limit(50));
+        }
+
         const snapshot = await getDocs(q);
 
         const places = snapshot.docs.map(doc => ({

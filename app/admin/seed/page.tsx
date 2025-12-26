@@ -5,7 +5,8 @@ import { fetchPlacesFromSerpApi } from "@/app/actions/seed-places";
 import { db } from "@/app/lib/firebase";
 import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 import { Loader2, Database, CheckCircle, AlertTriangle } from "lucide-react";
-import { Place } from "@/app/lib/types";
+import { Place, PlaceCategory } from "@/app/lib/types";
+import { cn, inferCategory } from "@/app/lib/utils";
 
 export default function SeederPage() {
     const [loading, setLoading] = useState(false);
@@ -44,7 +45,8 @@ export default function SeederPage() {
                         address: p.location.address
                     },
                     image_url: p.image_url,
-                    estimated_time: "2 hours" // Default
+                    estimated_time: "2 hours", // Default
+                    category: inferCategory(query) as PlaceCategory
                 };
 
                 // Write to Firestore "places" collection
@@ -123,3 +125,5 @@ export default function SeederPage() {
         </div>
     );
 }
+
+// function inferCategory removed - imported from @/app/lib/utils
