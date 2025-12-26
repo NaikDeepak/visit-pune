@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx app/",
+    "lint:fix": "eslint --ext .ts,.tsx,.js,.jsx app/ --fix",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint",
+    "prebuild": "npm run check"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",

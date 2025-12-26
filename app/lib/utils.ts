@@ -6,22 +6,85 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Infers a broad category from a search query.
+ * Keyword-to-category mapping for efficient classification.
+ * Each entry maps a keyword to its corresponding PlaceCategory.
+ */
+const KEYWORD_CATEGORY_MAP: Record<string, string> = {
+  // History
+  "historical": "history",
+  "fort": "history",
+  "wada": "history",
+  "palace": "history",
+  "museum": "history",
+  "temple": "history",
+  "heritage": "history",
+  "ancient": "history",
+  "monument": "history",
+
+  // Food
+  "misal": "food",
+  "food": "food",
+  "cafe": "food",
+  "bakery": "food",
+  "dining": "food",
+  "restaurant": "food",
+  "cuisine": "food",
+  "eat": "food",
+  "eatery": "food",
+
+  // Nature
+  "trek": "nature",
+  "nature": "nature",
+  "garden": "nature",
+  "hill": "nature",
+  "lake": "nature",
+  "park": "nature",
+  "waterfall": "nature",
+  "hiking": "nature",
+  "mountain": "nature",
+
+  // Nightlife
+  "pub": "nightlife",
+  "bar": "nightlife",
+  "night": "nightlife",
+  "club": "nightlife",
+  "brewery": "nightlife",
+  "lounge": "nightlife",
+  "disco": "nightlife",
+
+  // Books
+  "book": "books",
+  "library": "books",
+  "bookstore": "books",
+
+  // Culture
+  "art": "culture",
+  "culture": "culture",
+  "theatre": "culture",
+  "theater": "culture",
+  "gallery": "culture",
+  "cultural": "culture",
+};
+
+/**
+ * Infers a broad category from a search query using keyword matching.
  * Useful for tagging generic places data from external APIs.
+ * 
+ * Performance: O(m) where m is the number of words in the query.
+ * Uses a keyword map for efficient lookups instead of nested if statements.
+ * 
  * @param query The search query string
  * @returns A PlaceCategory ("history", "food", etc.)
  */
 export function inferCategory(query: string): string {
   const q = query.toLowerCase();
 
-  // Heuristics mapping
-  // O(1) loop over map would be cleaner if list grows, but this is fine for now.
-  if (q.includes("historical") || q.includes("fort") || q.includes("wada") || q.includes("palace") || q.includes("museum") || q.includes("temple") || q.includes("heritage")) return "history";
-  if (q.includes("misal") || q.includes("food") || q.includes("cafe") || q.includes("bakery") || q.includes("dining") || q.includes("restaurant")) return "food";
-  if (q.includes("trek") || q.includes("nature") || q.includes("garden") || q.includes("hill") || q.includes("lake")) return "nature";
-  if (q.includes("pub") || q.includes("bar") || q.includes("night") || q.includes("club") || q.includes("brewery")) return "nightlife";
-  if (q.includes("book") || q.includes("library")) return "books";
-  if (q.includes("art") || q.includes("culture") || q.includes("theatre")) return "culture";
+  // Check each keyword in the map
+  for (const [keyword, category] of Object.entries(KEYWORD_CATEGORY_MAP)) {
+    if (q.includes(keyword)) {
+      return category;
+    }
+  }
 
   return "general";
 }

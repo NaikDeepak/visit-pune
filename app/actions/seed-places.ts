@@ -1,6 +1,6 @@
 "use server";
 
-import { getJson } from "serpapi";
+import { Place } from "@/app/lib/types";
 
 const API_KEY = process.env.SERPAPI_KEY;
 
@@ -62,7 +62,7 @@ const FALLBACK_DATA = [
     }
 ];
 
-export async function fetchPlacesFromSerpApi(query: string = "Top tourist places in Pune"): Promise<{ data: any[]; error?: string }> {
+export async function fetchPlacesFromSerpApi(query: string = "Top tourist places in Pune"): Promise<{ data: Place[]; error?: string }> {
     if (!API_KEY) {
         console.warn("Missing SERPAPI_KEY, returning fallback data.");
         return { data: FALLBACK_DATA };
@@ -86,7 +86,17 @@ export async function fetchPlacesFromSerpApi(query: string = "Top tourist places
         }
 
         return {
-            data: data.local_results.map((result: any) => ({
+            data: data.local_results.map((result: {
+                place_id: string;
+                title: string;
+                description?: string;
+                type?: string;
+                address?: string;
+                gps_coordinates?: { latitude: number; longitude: number };
+                thumbnail?: string;
+                rating?: number;
+                reviews?: number;
+            }) => ({
                 id: result.place_id,
                 name: result.title,
                 description: result.description || result.type || "Attraction in Pune",
@@ -97,8 +107,7 @@ export async function fetchPlacesFromSerpApi(query: string = "Top tourist places
                 },
                 rating: result.rating,
                 reviews: result.reviews,
-                image_url: result.thumbnail,
-                types: result.types
+                image_url: result.thumbnail
             }))
         };
 

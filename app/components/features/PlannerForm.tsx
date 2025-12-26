@@ -33,7 +33,7 @@ export function PlannerForm() {
                 <h2 className="text-2xl font-bold mb-6">Ask the Concierge</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-2 text-muted-foreground">What's your plan?</label>
+                        <label className="block text-sm font-medium mb-2 text-muted-foreground">What&apos;s your plan?</label>
                         <textarea
                             name="prompt"
                             rows={4}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/app/lib/auth-context";
-import { LogIn, Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 
 export default function SignInPage() {
     const { signInWithGoogle, loading, user, isAdmin } = useAuth();
@@ -23,7 +23,7 @@ export default function SignInPage() {
                         <h1 className="text-2xl font-bold">Access Denied</h1>
                     </div>
                     <p className="text-muted-foreground mb-4">
-                        You are signed in as <strong>{user.email}</strong>, but you don't have admin privileges.
+                        You are signed in as <strong>{user.email}</strong>, but you don&apos;t have admin privileges.
                     </p>
                     <p className="text-sm text-muted-foreground">
                         Only <code className="bg-black/20 px-1 py-0.5 rounded">deep.naik@gmail.com</code> can access the admin portal.

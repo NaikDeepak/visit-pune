@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { backfillCategories } from "@/app/actions/migrate-categories";
-import { Loader2, Database, CheckCircle, AlertTriangle, RefreshCcw } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle, RefreshCcw } from "lucide-react";
 
 export default function MigratePage() {
     const [loading, setLoading] = useState(false);
@@ -25,13 +25,13 @@ export default function MigratePage() {
         try {
             const migrationResults = await backfillCategories();
             setResults(migrationResults);
-        } catch (error: any) {
+        } catch (error) {
             setResults({
                 success: false,
                 updated: 0,
                 skipped: 0,
                 failed: 1,
-                errors: [error.message]
+                errors: [error instanceof Error ? error.message : 'Unknown error']
             });
         }
 
@@ -52,8 +52,8 @@ export default function MigratePage() {
                     for all places in Firestore that either:
                 </p>
                 <ul className="text-sm text-muted-foreground space-y-1 ml-6 list-disc mb-4">
-                    <li>Don't have a category field</li>
-                    <li>Have category set to "general"</li>
+                    <li>Don&apos;t have a category field</li>
+                    <li>Have category set to &quot;general&quot;</li>
                 </ul>
                 <p className="text-sm text-muted-foreground mb-6">
                     The script uses <strong>AI classification</strong> based on place names to determine

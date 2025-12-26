@@ -60,7 +60,7 @@ export function VibeGrid() {
     return (
         <section className="container px-6 py-20">
             <div className="mb-12 text-center">
-                <h2 className="text-3xl font-bold tracking-tight mb-4">What's your vibe today?</h2>
+                <h2 className="text-3xl font-bold tracking-tight mb-4">What&apos;s your vibe today?</h2>
                 <p className="text-muted-foreground">Select a category to get AI-curated suggestions.</p>
             </div>
 

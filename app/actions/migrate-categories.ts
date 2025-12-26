@@ -3,7 +3,7 @@
 import { db } from "@/app/lib/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { classifyQuery } from "./classify-category";
-import { Place, PlaceCategory } from "@/app/lib/types";
+import { Place } from "@/app/lib/types";
 
 /**
  * Backfill script to add category tags to existing places.
@@ -60,9 +60,9 @@ export async function backfillCategories(): Promise<{
                 results.updated++;
                 console.log(`[Migration] ✓ Updated ${place.name} → ${newCategory}`);
 
-            } catch (error: any) {
+            } catch (error) {
                 results.failed++;
-                const errorMsg = `Failed to update ${place.name}: ${error.message}`;
+                const errorMsg = `Failed to update ${place.name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
                 results.errors.push(errorMsg);
                 console.error(`[Migration] ✗ ${errorMsg}`);
             }
@@ -73,8 +73,8 @@ export async function backfillCategories(): Promise<{
 
         return results;
 
-    } catch (error: any) {
-        results.errors.push(`Migration failed: ${error.message}`);
+    } catch (error) {
+        results.errors.push(`Migration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         console.error("[Migration] Critical error:", error);
         return results;
     }

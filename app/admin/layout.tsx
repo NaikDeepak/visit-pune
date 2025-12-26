@@ -4,6 +4,7 @@ import { useAuth } from "@/app/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2, LogOut, User } from "lucide-react";
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { user, loading, isAdmin, signOut } = useAuth();
@@ -42,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="max-w-md w-full bg-red-500/10 border border-red-500/20 p-8 rounded-2xl">
                     <h1 className="text-2xl font-bold text-red-500 mb-4">Access Denied</h1>
                     <p className="text-muted-foreground">
-                        You don't have permission to access the admin portal.
+                        You don&apos;t have permission to access the admin portal.
                     </p>
                 </div>
             </div>
@@ -56,15 +57,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-8">
-                            <a href="/" className="text-xl font-bold text-peshwa">
+                            <Link href="/" className="text-xl font-bold text-peshwa">
                                 Visit Pune Admin
-                            </a>
+                            </Link>
                             <div className="hidden md:flex gap-4">
                                 <a
                                     href="/admin/seed"
                                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname === "/admin/seed"
-                                            ? "bg-peshwa/10 text-peshwa"
-                                            : "hover:bg-accent/50"
+                                        ? "bg-peshwa/10 text-peshwa"
+                                        : "hover:bg-accent/50"
                                         }`}
                                 >
                                     Seeding
@@ -72,8 +73,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 <a
                                     href="/admin/migrate"
                                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname === "/admin/migrate"
-                                            ? "bg-peshwa/10 text-peshwa"
-                                            : "hover:bg-accent/50"
+                                        ? "bg-peshwa/10 text-peshwa"
+                                        : "hover:bg-accent/50"
                                         }`}
                                 >
                                     Migration
@@ -89,7 +90,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 </span>
                             </div>
                             <button
-                                onClick={() => signOut()}
+                                onClick={async () => {
+                                    try {
+                                        await signOut();
+                                    } finally {
+                                        router.push("/admin/login");
+                                    }
+                                }}
                                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/50 hover:bg-accent transition-colors text-sm font-medium"
                             >
                                 <LogOut size={16} />

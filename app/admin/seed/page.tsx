@@ -4,10 +4,10 @@ import { useState } from "react";
 import { fetchPlacesFromSerpApi } from "@/app/actions/seed-places";
 import { classifyQuery } from "@/app/actions/classify-category";
 import { db } from "@/app/lib/firebase";
-import { doc, setDoc, collection, getDocs } from "firebase/firestore";
-import { Loader2, Database, CheckCircle, AlertTriangle } from "lucide-react";
-import { Place, PlaceCategory } from "@/app/lib/types";
-import { cn, inferCategory } from "@/app/lib/utils";
+import { doc, setDoc } from "firebase/firestore";
+import { Loader2, Database } from "lucide-react";
+import { Place } from "@/app/lib/types";
+import { inferCategory } from "@/app/lib/utils";
 
 export default function SeederPage() {
     const [loading, setLoading] = useState(false);
@@ -64,8 +64,8 @@ export default function SeederPage() {
 
             setLogs(prev => [`Success! Written ${count} documents.`, ...prev]);
 
-        } catch (e: any) {
-            setLogs(prev => [`Critical Error: ${e.message}`, ...prev]);
+        } catch (e) {
+            setLogs(prev => [`Critical Error: ${e instanceof Error ? e.message : 'Unknown error'}`, ...prev]);
         }
         setLoading(false);
     }
@@ -121,7 +121,7 @@ export default function SeederPage() {
             </div>
 
             <div className="bg-black/90 text-green-400 font-mono text-sm p-4 rounded-xl h-64 overflow-y-auto">
-                {logs.length === 0 && <span className="text-gray-500">// Logs will appear here...</span>}
+                {logs.length === 0 && <span className="text-gray-500">Logs will appear here...</span>}
                 {logs.map((log, i) => (
                     <div key={i} className="mb-1 border-b border-white/10 pb-1">
                         {log.includes("Error") ? <span className="text-red-400">{log}</span> : log}

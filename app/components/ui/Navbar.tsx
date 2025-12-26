@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Menu, X, MapPin } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/app/lib/utils";
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
