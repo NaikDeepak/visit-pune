@@ -73,7 +73,7 @@ export default async function ExplorePage({
                                         </div>
                                     )}
                                     <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded-full uppercase tracking-wider">
-                                        {place.category || "General"}
+                                        {place.category || "general"}
                                     </div>
                                     <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                                         <Star size={12} className="text-yellow-400 fill-yellow-400" />
