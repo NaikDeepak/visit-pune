@@ -5,20 +5,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'lh3.googleusercontent.com', // Google Maps images
+        hostname: '**', // Allow ALL external images (aggregated from web)
       },
-      {
-        protocol: 'https',
-        hostname: 'lh5.googleusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'serpapi.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      }
     ],
   },
 };

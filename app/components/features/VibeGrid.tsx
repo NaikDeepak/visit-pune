@@ -103,7 +103,7 @@ export function VibeGrid() {
                 viewport={{ once: true, margin: "-50px" }}
                 className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[250px]"
             >
-                {vibes.map((vibe, i) => (
+                {vibes.map((vibe) => (
                     <motion.div
                         key={vibe.id}
                         variants={item}
