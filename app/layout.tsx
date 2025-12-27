@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 
 import { sharedMetadata } from "./shared-metadata";
 import { AuthProvider } from "./lib/auth-context";
+import { Footer } from "./components/ui/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <Footer />
         </AuthProvider>
       </body>
     </html>

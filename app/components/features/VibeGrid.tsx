@@ -1,99 +1,147 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Coffee, Landmark, Mountain, Music, Moon, BookOpen } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/app/lib/utils";
 
 const vibes = [
     {
         id: "history",
-        title: "Heritage Walks",
-        icon: Landmark,
-        desc: "Shaniwar Wada to Agashechi Wadi.",
-        color: "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400",
+        title: "Heritage",
+        desc: "Walk through the Peshwa legacy",
+        image: "/vibes/history.png",
         colSpan: "md:col-span-2",
+        rowSpan: "md:row-span-2",
     },
     {
         id: "food",
-        title: "Misal & More",
-        icon: Coffee,
-        desc: "Spicy adventures.",
-        color: "bg-peshwa/10 text-peshwa",
+        title: "Misal Trails",
+        desc: "Spicy adventures await",
+        image: "/vibes/food.png",
         colSpan: "md:col-span-1",
+        rowSpan: "md:row-span-1",
     },
     {
         id: "nature",
-        title: "Sahyadri Escapes",
-        icon: Mountain,
-        desc: "Trek the forts.",
-        color: "bg-sahyadri/10 text-sahyadri",
+        title: "Sahyadri",
+        desc: "Monsoon treks & forts",
+        image: "/vibes/nature.png",
         colSpan: "md:col-span-1",
+        rowSpan: "md:row-span-2",
     },
     {
         id: "nightlife",
         title: "KP Nights",
-        icon: Moon,
-        desc: "Craft beers & high spirits.",
-        color: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400",
-        colSpan: "md:col-span-2",
+        desc: "Craft beers & high spirits",
+        image: "/vibes/nightlife.png",
+        colSpan: "md:col-span-1",
+        rowSpan: "md:row-span-1",
     },
     {
         id: "culture",
-        title: "Art & Culture",
-        icon: Music,
-        desc: "Theatre to Sawyer.",
-        color: "bg-pink-100 dark:bg-pink-900/30 text-pink-600",
+        title: "Culture Check",
+        desc: "Theatre, Music & Arts",
+        image: "/vibes/culture.png",
         colSpan: "md:col-span-1",
+        rowSpan: "md:row-span-1",
     },
     {
         id: "books",
         title: "Oxford East",
-        icon: BookOpen,
-        desc: "Book cafes & libraries.",
-        color: "bg-mula/10 text-mula",
-        colSpan: "md:col-span-1",
+        desc: "ABC & Book Cafes",
+        image: "/vibes/books.png",
+        colSpan: "md:col-span-3",
+        rowSpan: "md:row-span-1",
     },
 ];
 
 export function VibeGrid() {
-    return (
-        <section className="container px-6 py-20">
-            <div className="mb-12 text-center">
-                <h2 className="text-3xl font-bold tracking-tight mb-4">What&apos;s your vibe today?</h2>
-                <p className="text-muted-foreground">Select a category to get AI-curated suggestions.</p>
-            </div>
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[180px]">
+    const item = {
+        hidden: { opacity: 0, scale: 0.9, y: 30 },
+        show: {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            transition: { type: "spring", stiffness: 40, damping: 15 }
+        }
+    } as const;
+
+    return (
+        <section className="container px-6 py-24">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="mb-12 flex flex-col md:flex-row items-end justify-between gap-6"
+            >
+                <div>
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">Find your <span className="text-peshwa">Vibe</span></h2>
+                    <p className="text-xl text-muted-foreground">Curated experiences for every mood.</p>
+                </div>
+                <Link href="/explore" className="group flex items-center gap-2 font-medium hover:text-peshwa transition-colors">
+                    View all categories <ArrowUpRight size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                </Link>
+            </motion.div>
+
+            <motion.div
+                variants={container}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: "-50px" }}
+                className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[250px]"
+            >
                 {vibes.map((vibe, i) => (
                     <motion.div
                         key={vibe.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.1 }}
+                        variants={item}
                         className={cn(
-                            "group relative overflow-hidden rounded-3xl p-6 transition-all hover:shadow-lg cursor-pointer border border-border bg-card",
-                            vibe.colSpan
+                            "group relative overflow-hidden rounded-3xl cursor-pointer bg-muted",
+                            vibe.colSpan,
+                            vibe.rowSpan
                         )}
                     >
-                        <div className={cn("absolute top-0 right-0 p-32 rounded-full opacity-10 blur-3xl transition-all group-hover:scale-110", vibe.color.split(" ")[0])} />
+                        <Link href={`/explore?vibe=${vibe.id}`} className="block h-full w-full">
+                            {/* Background Image with Zoom Effect */}
+                            <Image
+                                src={vibe.image}
+                                alt={vibe.title}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            />
 
-                        <Link href={`/explore?vibe=${vibe.id}`} className="absolute inset-0 z-20" />
+                            {/* Gradient Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity group-hover:opacity-90" />
 
-                        <div className="relative z-10 h-full flex flex-col justify-between">
-                            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors", vibe.color)}>
-                                <vibe.icon size={24} />
+                            {/* Content */}
+                            <div className="absolute bottom-0 left-0 p-6 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                <h3 className="text-2xl font-bold text-white mb-1 group-hover:text-peshwa-light transition-colors">{vibe.title}</h3>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm text-white/80 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75 transform translate-y-2 group-hover:translate-y-0">
+                                        {vibe.desc}
+                                    </p>
+                                    <div className="bg-white/20 backdrop-blur-md p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-50 group-hover:scale-100">
+                                        <ArrowUpRight className="text-white" size={16} />
+                                    </div>
+                                </div>
                             </div>
-
-                            <div>
-                                <h3 className="text-xl font-bold mb-1 group-hover:text-peshwa transition-colors">{vibe.title}</h3>
-                                <p className="text-sm text-muted-foreground font-medium">{vibe.desc}</p>
-                            </div>
-                        </div>
+                        </Link>
                     </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </section>
     );
 }

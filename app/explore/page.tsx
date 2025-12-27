@@ -1,8 +1,8 @@
 import { getPlaces } from "@/app/actions/get-places";
 import { Navbar } from "@/app/components/ui/Navbar";
-import { MapPin, Star, Clock } from "lucide-react";
-import Image from "next/image";
+import { MapPin } from "lucide-react";
 import { Metadata } from "next";
+import { ExploreClient } from "@/app/components/features/ExploreClient";
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -27,80 +27,53 @@ export default async function ExplorePage({
     const resolvedSearchParams = await searchParams;
     const vibe = typeof resolvedSearchParams.vibe === 'string' ? resolvedSearchParams.vibe : undefined;
 
-    // Fetch data
+    // Fetch data (Server Side)
     const { data: places, error } = await getPlaces(vibe);
 
     return (
-        <main className="min-h-screen bg-background">
+        <main className="min-h-screen bg-background flex flex-col">
             <Navbar />
-            <div className="pt-32 pb-20 container mx-auto px-4">
-                <header className="mb-12 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">Explore Pune</h1>
-                    <p className="text-lg text-muted-foreground">
+
+            {/* Header with Pattern */}
+            <div className="pt-32 pb-6 bg-peshwa/5 px-6 relative overflow-hidden">
+                {/* Subtle Texture Overlay */}
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('/public/cubes.png')] mix-blend-multiply"></div>
+
+                <div className="container mx-auto text-center relative z-10">
+                    <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">
+                        {vibe ? `Explore: ${vibe.charAt(0).toUpperCase() + vibe.slice(1)}` : "Explore Pune"}
+                    </h1>
+                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-2">
                         {vibe
                             ? `Curated spots for the "${vibe}" vibe.`
                             : "Discover the hidden gems and iconic landmarks of the city."}
                     </p>
-                </header>
+                </div>
+            </div>
 
+            <div className="flex-1 bg-gradient-to-b from-background to-secondary/20">
                 {error && (
-                    <div className="text-center p-10 bg-red-500/10 text-red-500 rounded-2xl">
-                        {error}
+                    <div className="container mx-auto px-6 pt-8">
+                        <div className="text-center p-10 bg-red-500/10 text-red-500 rounded-2xl border border-red-500/20">
+                            {error}
+                        </div>
                     </div>
                 )}
 
                 {!places || places.length === 0 ? (
-                    <div className="text-center p-20 opacity-50">
-                        <MapPin size={48} className="mx-auto mb-4" />
-                        <p>No places found. Try seeding the database in Admin!</p>
+                    <div className="container mx-auto text-center py-24 px-6 opacity-80 max-w-md">
+                        <div className="bg-muted p-6 rounded-full inline-block mb-6 animate-pulse">
+                            <MapPin size={48} className="text-muted-foreground" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-2">No spots found here... yet!</h3>
+                        <p className="text-muted-foreground mb-8 text-lg">We couldn&apos;t find any places matching this vibe. Try exploring other categories or check back later.</p>
+                        <a href="/admin/seed" className="px-8 py-3 bg-peshwa text-white rounded-full font-bold hover:bg-peshwa/90 transition-all shadow-lg hover:shadow-peshwa/30 hover:-translate-y-1 inline-block">
+                            Seed Database
+                        </a>
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {places.map((place) => (
-                            <div key={place.id} className="group bg-card glass border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-all hover:border-peshwa/50">
-                                <div className="aspect-video relative bg-accent">
-                                    {place.image_url ? (
-                                        <Image
-                                            src={place.image_url}
-                                            alt={place.name}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                                            <MapPin size={32} />
-                                        </div>
-                                    )}
-                                    <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded-full uppercase tracking-wider">
-                                        {place.category || "general"}
-                                    </div>
-                                    <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                        <Star size={12} className="text-yellow-400 fill-yellow-400" />
-                                        {place.rating || "New"}
-                                    </div>
-                                </div>
-
-                                <div className="p-6">
-                                    <h3 className="text-xl font-bold mb-2 group-hover:text-peshwa transition-colors line-clamp-1">{place.name}</h3>
-                                    <p className="text-muted-foreground text-sm line-clamp-2 mb-4">{place.description}</p>
-
-                                    <div className="flex items-center gap-4 text-xs font-medium text-foreground/70">
-                                        <span className="flex items-center gap-1">
-                                            <Clock size={14} />
-                                            {place.estimated_time || "1-2 hrs"}
-                                        </span>
-                                        {place.location?.address && (
-                                            <span className="flex items-center gap-1 truncate max-w-[150px]">
-                                                <MapPin size={14} />
-                                                {place.location.address.split(',')[0]}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    // Client Component handles the interactive Mesh Grid & Filtering
+                    <ExploreClient initialPlaces={places} vibe={vibe} />
                 )}
             </div>
         </main>
