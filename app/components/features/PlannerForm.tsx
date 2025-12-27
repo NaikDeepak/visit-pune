@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { generateItinerary } from "@/app/actions/plan-trip";
 import { Itinerary } from "@/app/lib/types";
 import { Loader2, Send, MapPin, Clock, AlignLeft, Sparkles } from "lucide-react";
@@ -15,6 +15,15 @@ export function PlannerForm() {
     const [selectedDuration, setSelectedDuration] = useState("4 hours");
     const [statusMessage, setStatusMessage] = useState("Thinking...");
     const [selectedStopIndex, setSelectedStopIndex] = useState<number | null>(null);
+
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        };
+    }, []);
 
     const loadingMessages = [
         "Consulting with the Peshwas... 🏰",
@@ -32,7 +41,8 @@ export function PlannerForm() {
 
         // Cycle through status messages
         let msgIdx = 0;
-        const interval = setInterval(() => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = setInterval(() => {
             setStatusMessage(loadingMessages[msgIdx % loadingMessages.length]);
             msgIdx++;
         }, 1500);
@@ -49,7 +59,8 @@ export function PlannerForm() {
                 alert(res.error || "Something went wrong");
             }
         } finally {
-            clearInterval(interval);
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            intervalRef.current = null;
             setLoading(false);
         }
     }

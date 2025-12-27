@@ -66,7 +66,9 @@ export function ExploreClient({ initialPlaces, vibe }: Props) {
             {filteredPlaces.length === 0 ? (
                 <div className="text-center py-20 opacity-60">
                     <Filter size={48} className="mx-auto mb-4" />
-                    <h3 className="text-xl font-bold">No spots match this filter.</h3>
+                    <h3 className="text-xl font-bold">
+                        No spots match &quot;{activeFilter}&quot; {vibe ? `in ${vibe}` : ''}.
+                    </h3>
                     <button
                         onClick={() => setActiveFilter("All")}
                         className="mt-4 text-peshwa hover:underline"

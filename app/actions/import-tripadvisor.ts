@@ -1,6 +1,6 @@
 "use server";
 
-import { adminDb } from "@/app/lib/firebase-admin";
+import { getAdminDb } from "@/app/lib/firebase-admin";
 import { GoogleGenAI } from "@google/genai";
 import { Place, PlaceCategory } from "@/app/lib/types";
 
@@ -15,6 +15,7 @@ type ImportResult = {
 };
 
 export async function importTripAdvisorData(jsonString: string): Promise<ImportResult> {
+    const adminDb = getAdminDb();
     const logs: string[] = [];
     let success = 0;
     let failed = 0;
@@ -78,7 +79,7 @@ export async function importTripAdvisorData(jsonString: string): Promise<ImportR
                     }
                 });
 
-                const enriched = JSON.parse(aiRes.response.text() || "{}");
+                const enriched = JSON.parse(aiRes.text || "{}");
 
                 // 3. Map Price Level
                 let priceLevel = 1;
