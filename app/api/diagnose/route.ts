@@ -22,23 +22,34 @@ export async function GET() {
         }
     };
 
-    // Test Firestore
+    // Test Firestore (Complex Query - Tests Indexes)
     try {
         const db = getAdminDb();
-        const collections = await db.listCollections();
-        diagnostics.firestore.status = `Connected. Collections: ${collections.map(c => c.id).join(", ")}`;
+        const { FieldPath } = require("firebase-admin/firestore");
+
+        // Exact query from get-firestore-events.ts
+        const snapshot = await db.collection("events")
+            .where("isActive", "==", true)
+            .orderBy("isSponsored", "desc")
+            .orderBy("startDate", "asc")
+            .orderBy(FieldPath.documentId(), "asc")
+            .limit(1)
+            .get();
+
+        diagnostics.firestore.status = `Connected. Found ${snapshot.size} events (Index Valid).`;
     } catch (error) {
-        diagnostics.firestore.status = "Failed";
+        diagnostics.firestore.status = "Failed (Likely Missing Index)";
         diagnostics.firestore.error = error instanceof Error ? error.message : String(error);
     }
 
-    // Test Gemini
+    // Test Gemini (JSON Mode)
     try {
-        await ai.models.generateContent({
+        const response = await ai.models.generateContent({
             model: "gemini-2.0-flash",
-            contents: "Hello",
+            contents: "List 3 fruits in JSON format: { fruits: [] }",
+            config: { responseMimeType: "application/json" }
         });
-        diagnostics.gemini.status = "Connected. Response received.";
+        diagnostics.gemini.status = `Connected. JSON Response: ${response.text?.substring(0, 50)}...`;
     } catch (error) {
         diagnostics.gemini.status = "Failed";
         diagnostics.gemini.error = error instanceof Error ? error.message : String(error);
