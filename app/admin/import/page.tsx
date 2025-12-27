@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { importTripAdvisorData } from "@/app/actions/import-tripadvisor";
-import { Sidebar } from "lucide-react";
+
 import Link from "next/link";
 import { Navbar } from "@/app/components/ui/Navbar";
 
@@ -28,7 +28,7 @@ export default function ImportPage() {
                 skipped: result.skipped
             });
             setLogs(prev => [...prev, "✨ Import Completed!"]);
-        } catch (e) {
+        } catch {
             setLogs(prev => [...prev, "❌ Critical System Error during invocation."]);
         } finally {
             setLoading(false);

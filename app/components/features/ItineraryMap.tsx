@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Map, { Marker, MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { ItineraryStop } from "@/app/lib/types";
-import type { MapLayerMouseEvent } from "mapbox-gl";
+
 
 type Props = {
     stops: ItineraryStop[];
@@ -69,7 +69,7 @@ export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick }: Props)
                         key={stop.place.id || index}
                         latitude={stop.place.location.lat}
                         longitude={stop.place.location.lng}
-                        onClick={(e: any) => {
+                        onClick={(e) => {
                             e.originalEvent.stopPropagation();
                             onMarkerClick(index);
                         }}

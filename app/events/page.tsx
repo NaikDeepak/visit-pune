@@ -1,14 +1,20 @@
-"use client";
-
 import { Navbar } from "@/app/components/ui/Navbar";
-import { Calendar, MapPin } from "lucide-react";
+import { fetchEventsFromFirestore } from "@/app/actions/get-firestore-events";
 
-export default function EventsPage() {
+// This is now a Server Component
+export const revalidate = 3600; // Revalidate every hour
+
+import { EventsGrid } from "@/app/components/events/EventsGrid";
+
+export default async function EventsPage() {
+    // Server fetch
+    const { events, nextCursor } = await fetchEventsFromFirestore();
+
     return (
         <main className="min-h-screen bg-background flex flex-col">
             <Navbar />
 
-            {/* Simple Hero */}
+            {/* Hero Section */}
             <div className="pt-32 pb-12 bg-peshwa/5 px-6">
                 <div className="container mx-auto text-center">
                     <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">Upcoming Events</h1>
@@ -18,17 +24,8 @@ export default function EventsPage() {
                 </div>
             </div>
 
-            {/* Empty State */}
-            <div className="flex-1 container mx-auto px-6 py-20 flex flex-col items-center justify-center text-center opacity-60">
-                <div className="bg-muted p-6 rounded-full mb-6">
-                    <Calendar size={48} className="text-peshwa" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2">Curating the Best for You</h2>
-                <p className="max-w-md mx-auto">
-                    We are currently gathering the latest events happening in Pune. Check back soon for a curated list of concerts, plays, and workshops.
-                </p>
-            </div>
-
+            {/* Events Grid (Client Side with Load More) */}
+            <EventsGrid initialEvents={events} initialCursor={nextCursor} />
         </main>
     );
 }
