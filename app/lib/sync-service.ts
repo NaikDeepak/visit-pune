@@ -20,7 +20,7 @@ interface SerpApiEvent {
     link?: string;
     thumbnail?: string;
     image?: string;
-    address?: string[];
+    address?: string | string[]; // Allow string for legacy/api variations
     venue?: { name: string; rating?: number; reviews?: number };
     date?: {
         start_date?: string;
@@ -29,6 +29,31 @@ interface SerpApiEvent {
     event_location_map?: {
         image?: string;
         link?: string;
+    };
+}
+
+/**
+ * Strict schema for Event documents in Firestore.
+ * All write paths must adhere to this to simplify the read layer.
+ */
+interface FirestoreEventDoc {
+    title: string;
+    description: string;
+    link: string;
+    thumbnail: string;
+    address: string[];
+    venue: string;
+    dateDisplay: string;
+    startDate: Timestamp;
+    tags: string[];
+    updatedAt: Timestamp;
+    createdAt?: Timestamp;
+    isActive: boolean;
+    isSponsored: boolean;
+    isHighlighted: boolean;
+    metadata: {
+        source: string;
+        originalData?: unknown;
     };
 }
 
@@ -269,17 +294,24 @@ export async function syncEventsService(triggeredBy: string, forceImageResync: b
             // Debug Log
             // console.debug(`Processing: ${event.title.substring(0, 20)}... | Date: ${startDate.toISOString()} | ID: ${docId}`);
 
-            const eventData = {
-                title: event.title,
-                description: event.description || "",
-                link: event.link,
-                thumbnail: imageUrl, // Use High-Res
-                address: event.address || [],
-                venue: event.venue?.name || "",
-                dateDisplay: event.date?.when || event.date?.start_date,
+            const currentData = docSnap?.exists ? docSnap.data() as Partial<FirestoreEventDoc> : null;
+
+            const eventData: FirestoreEventDoc = {
+                title: event.title || currentData?.title || "Untitled Event",
+                description: event.description ?? currentData?.description ?? "",
+                link: event.link || currentData?.link || "",
+                thumbnail: imageUrl || currentData?.thumbnail || "",
+                address: Array.isArray(event.address)
+                    ? event.address.map(String)
+                    : (event.address ? [String(event.address)] : (currentData?.address ?? [])),
+                venue: event.venue?.name || currentData?.venue || "",
+                dateDisplay: event.date?.when || event.date?.start_date || currentData?.dateDisplay || "",
                 startDate: Timestamp.fromDate(startDate),
-                tags: ["Pune"],
+                tags: currentData?.tags ?? ["Pune"],
                 updatedAt: Timestamp.now(),
+                isActive: currentData?.isActive ?? true,
+                isSponsored: currentData?.isSponsored ?? false,
+                isHighlighted: currentData?.isHighlighted ?? false,
                 metadata: {
                     source: "serpapi",
                     originalData: event
@@ -287,24 +319,13 @@ export async function syncEventsService(triggeredBy: string, forceImageResync: b
             };
 
             if (docSnap && docSnap.exists) {
-                // Update - preserve existing flags if present, otherwise default
-                const currentData = docSnap.data();
-                batch.update(eventRef, {
-                    ...eventData,
-                    isActive: currentData?.isActive ?? true,
-                    isSponsored: currentData?.isSponsored ?? false,
-                    isHighlighted: currentData?.isHighlighted ?? false
-                });
+                // Update
+                batch.update(eventRef, { ...eventData });
                 stats.updated++;
             } else {
-                // Create - Set defaults
-                batch.set(eventRef, {
-                    ...eventData,
-                    isActive: true, // Default to visible
-                    isSponsored: false,
-                    isHighlighted: false,
-                    createdAt: Timestamp.now()
-                });
+                // Create
+                eventData.createdAt = Timestamp.now();
+                batch.set(eventRef, eventData);
                 stats.added++;
             }
         };
