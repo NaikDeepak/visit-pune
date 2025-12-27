@@ -98,8 +98,8 @@ export function Hero() {
                                 key={index}
                                 className="text-xs md:text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1 rounded-full backdrop-blur-sm transition-all hover:scale-105 hover:text-white"
                                 onClick={(e) => {
-                                    const input = document.querySelector('input[type="text"]') as HTMLInputElement;
-                                    if (input) input.value = chip.replace(/ .*/, '...'); // Simple simulation
+                                    const input = e.currentTarget.closest('.relative.group')?.querySelector('input[type="text"]') as HTMLInputElement;
+                                    if (input) input.value = chip.replace(/ .*/, '...');
                                 }}
                             >
                                 {chip}

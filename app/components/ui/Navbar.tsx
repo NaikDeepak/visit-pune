@@ -10,8 +10,13 @@ import { cn } from "@/app/lib/utils";
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [hasMounted, setHasMounted] = useState(false);
     const pathname = usePathname();
-    const isHome = pathname === "/";
+    const isHome = hasMounted && pathname === "/";
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {

@@ -21,6 +21,7 @@ const INITIAL_VIEW_STATE = {
 
 export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick }: Props) {
     const mapRef = useRef<MapRef>(null);
+    const hasInitiallyLoaded = useRef(false);
     const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
 
     // Zoom to selected stop
@@ -37,13 +38,19 @@ export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick }: Props)
 
     // Zoom to fit all stops on load
     useEffect(() => {
-        if (stops.length > 0 && mapRef.current) {
+        if (stops.length > 0 && mapRef.current && !hasInitiallyLoaded.current) {
             const firstStop = stops[0];
             // Use jumpTo to instantly center without animation on initial load
             mapRef.current.jumpTo({
                 center: [firstStop.place.location.lng, firstStop.place.location.lat],
                 zoom: 13
             });
+            hasInitiallyLoaded.current = true;
+        }
+
+        // Reset if stops are cleared (e.g. new generation)
+        if (stops.length === 0) {
+            hasInitiallyLoaded.current = false;
         }
     }, [stops]);
 
@@ -59,10 +66,10 @@ export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick }: Props)
             >
                 {stops.map((stop, index) => (
                     <Marker
-                        key={index}
+                        key={stop.place.id || index}
                         latitude={stop.place.location.lat}
                         longitude={stop.place.location.lng}
-                        onClick={(e: MapLayerMouseEvent) => {
+                        onClick={(e: any) => {
                             e.originalEvent.stopPropagation();
                             onMarkerClick(index);
                         }}

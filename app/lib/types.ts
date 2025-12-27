@@ -12,6 +12,7 @@ export interface Place {
     reviews?: number;
     estimated_time?: string; // "1 hour"
     category?: PlaceCategory;
+    price_level?: number; // 0-4
 }
 
 export type PlaceCategory =

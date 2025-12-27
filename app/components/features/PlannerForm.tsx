@@ -247,7 +247,7 @@ export function PlannerForm() {
                             {/* Map Container */}
                             <div className="h-[400px] lg:h-full rounded-[2.5rem] overflow-hidden border border-border shadow-2xl sticky lg:top-6">
                                 <ItineraryMap
-                                    stops={result.stops}
+                                    stops={result.stops || []}
                                     selectedStopIndex={selectedStopIndex}
                                     onMarkerClick={setSelectedStopIndex}
                                 />
