@@ -44,7 +44,7 @@ export function Navbar() {
                     "rounded-full flex items-center justify-between px-6 py-3 transition-all duration-300",
                     isTransparent
                         ? "bg-transparent border-transparent"
-                        : "bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg shadow-black/5"
+                        : "bg-background/80 backdrop-blur-xl border border-border shadow-lg shadow-black/5"
                 )}>
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group">
@@ -110,7 +110,7 @@ export function Navbar() {
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
                         className="absolute top-20 left-4 right-4 md:hidden"
                     >
-                        <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-4 flex flex-col gap-2 shadow-2xl border border-white/20">
+                        <div className="bg-background/90 backdrop-blur-xl rounded-3xl p-4 flex flex-col gap-2 shadow-2xl border border-border">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
