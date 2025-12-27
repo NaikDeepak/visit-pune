@@ -2,9 +2,18 @@
 
 import { useSyncExternalStore, useMemo } from "react";
 
+const MY_PLANS_EVENT = "myPlans:changed";
+
 function subscribe(callback: () => void) {
+    if (typeof window === "undefined") return () => { };
+
     window.addEventListener("storage", callback);
-    return () => window.removeEventListener("storage", callback);
+    window.addEventListener(MY_PLANS_EVENT, callback);
+
+    return () => {
+        window.removeEventListener("storage", callback);
+        window.removeEventListener(MY_PLANS_EVENT, callback);
+    };
 }
 
 function getSnapshot() {
@@ -58,7 +67,7 @@ export function useSavedEvent(eventId: string) {
         const newValue = JSON.stringify(plans);
         localStorage.setItem("myPlans", newValue);
 
-        // Dispatch a StorageEvent so unrelated components (Navbar) can update count
+        // Dispatch a StorageEvent so other tabs update
         window.dispatchEvent(
             new StorageEvent("storage", {
                 key: "myPlans",
@@ -68,6 +77,9 @@ export function useSavedEvent(eventId: string) {
                 url: window.location.href,
             }),
         );
+
+        // Dispatch custom event for same-tab updates
+        window.dispatchEvent(new Event(MY_PLANS_EVENT));
         return nextIsSaved;
     };
 

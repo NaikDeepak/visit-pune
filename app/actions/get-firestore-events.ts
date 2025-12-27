@@ -36,16 +36,18 @@ function encodeCursor(event: EventData & { isSponsored?: boolean, startDateVal: 
  */
 function decodeCursor(cursor: string): CursorData | null {
     try {
-        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
-        if (
-            typeof decoded === 'object' && decoded !== null &&
-            typeof decoded.s === 'number' &&
-            typeof decoded.t === 'number' &&
-            typeof decoded.i === 'string'
-        ) {
-            return decoded as CursorData;
-        }
-        return null;
+        const decoded = JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
+
+        if (typeof decoded !== "object" || decoded === null) return null;
+
+        const casted = decoded as Record<string, unknown>;
+        const s = Number(casted.s);
+        const t = Number(casted.t);
+        const i = String(casted.i ?? "");
+
+        if (!Number.isFinite(s) || !Number.isFinite(t) || !i) return null;
+
+        return { s, t, i };
     } catch {
         return null;
     }
@@ -105,34 +107,40 @@ export async function fetchEventsFromFirestore(cursor?: string): Promise<FetchEv
 
         const allFetchedEvents = snapshot.docs.map(doc => {
             const data = doc.data() as {
-                title: string;
-                description: string;
-                link: string;
-                thumbnail: string;
-                address: string;
-                venue: string;
+                title?: string;
+                description?: string;
+                link?: string;
+                thumbnail?: string;
+                address?: unknown;
+                venue?: string;
                 dateDisplay?: string;
-                startDate: Timestamp;
+                startDate?: Timestamp;
                 isActive?: boolean;
                 isSponsored?: boolean;
             };
+
+            const startDate = data.startDate;
+            if (!startDate || typeof (startDate as unknown as Record<string, unknown>).toDate !== "function") {
+                return null;
+            }
+
             return {
                 id: doc.id,
-                title: data.title,
-                description: data.description,
-                link: data.link,
-                thumbnail: data.thumbnail,
-                address: Array.isArray(data.address) ? data.address : (data.address ? [data.address] : []),
+                title: data.title || "Untitled Event",
+                description: data.description || "",
+                link: data.link || "#",
+                thumbnail: data.thumbnail || "",
+                address: Array.isArray(data.address) ? data.address : (data.address ? [String(data.address)] : []),
                 venue: { name: data.venue || "" },
                 date: {
-                    start_date: data.dateDisplay || data.startDate.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+                    start_date: data.dateDisplay || startDate.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
                     when: data.dateDisplay
                 },
-                startDateVal: data.startDate.toMillis(),
+                startDateVal: startDate.toMillis(),
                 isActive: data.isActive ?? true,
                 isSponsored: data.isSponsored ?? false
             };
-        });
+        }).filter((e): e is NonNullable<typeof e> => e !== null);
 
         let sortedEvents = allFetchedEvents;
 

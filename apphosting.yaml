@@ -9,19 +9,18 @@ env:
   - variable: "NEXT_PUBLIC_BASE_URL"
     value: "https://visitpune.in"
   - variable: "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
-    value: ""
+    value: "visit-pune"
   - variable: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
-    value: ".com"
+    value: "visit-pune.firebaseapp.com"
   - variable: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
-    value: ".app"
+    value: "visit-pune.firebasestorage.app"
   - variable: "NEXT_PUBLIC_FIREBASE_API_KEY"
-    value: ""
+    value: "AIzaSyD58zUeJeT0Y3L6sH83C2TNxBe4Sox6mls"
   - variable: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
-    value: ""
+    value: "177867316098"
   - variable: "NEXT_PUBLIC_FIREBASE_APP_ID"
-    value: "1::web:"
-  - variable: "NEXT_PUBLIC_MAPBOX_TOKEN"
-    value: "pk.."
+    value: "1:177867316098:web:c7268ace7c2bbf47714d9b"
+
 
 # Secrets (Managed in Firebase Console -> App Hosting Settings)
 # The 'secret' field should contain the NAME of the secret, not its value.
@@ -38,3 +37,5 @@ secrets:
     secret: "CRON_SECRET"
   - variable: "ELEVENLABS_API_KEY"
     secret: "ELEVENLABS_API_KEY"
+  - variable: "MAPBOX_TOKEN"
+    value: "pk.."
