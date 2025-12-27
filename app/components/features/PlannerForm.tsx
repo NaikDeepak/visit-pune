@@ -195,7 +195,7 @@ export function PlannerForm() {
                             {/* Scrollable Timeline */}
                             <div className="bg-card/30 glass rounded-[2.5rem] p-6 lg:p-8 overflow-y-auto theme-scrollbar border border-border/50 relative">
                                 <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-6 sticky top-0 bg-card/95 backdrop-blur-md p-2 z-20 rounded-lg">Your Timeline</h4>
-                                <div className="space-y-8 relative pl-4 lg:pl-6 before:absolute before:left-[11px] lg:before:left-[21px] before:top-12 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-peshwa before:via-peshwa/50 before:to-transparent">
+                                <div className="space-y-8 relative pl-4 lg:pl-6 before:absolute before:left-[19px] before:top-12 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-peshwa before:via-peshwa/50 before:to-transparent">
                                     {result.stops?.map((stop, i) => (
                                         <motion.div
                                             key={i}
@@ -207,7 +207,7 @@ export function PlannerForm() {
                                         >
                                             {/* Timeline Dot */}
                                             <div className={`
-                                                absolute -left-[29px] lg:-left-[39px] top-6 w-8 h-8 rounded-full border-4 z-10 shadow-sm transition-all duration-300
+                                                absolute -left-[12px] lg:-left-[20px] top-6 w-8 h-8 rounded-full border-4 z-10 shadow-sm transition-all duration-300
                                                 ${selectedStopIndex === i ? "bg-peshwa border-peshwa scale-110 shadow-peshwa/40" : "bg-background border-peshwa group-hover:bg-peshwa"}
                                             `}>
                                                 <span className={`
