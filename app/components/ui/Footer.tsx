@@ -7,7 +7,13 @@ export function Footer() {
         <footer className="w-full bg-background border-t border-border py-8 mt-auto">
             <div className="container px-6 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                    <MapPin className="text-peshwa" size={18} />
+                    <div className="w-6 h-6 relative">
+                        <img
+                            src="/logo.png"
+                            alt="Visit Pune Logo"
+                            className="object-contain w-full h-full"
+                        />
+                    </div>
                     <span className="font-bold text-lg tracking-tight">
                         Visit<span className="text-peshwa">Pune</span>
                     </span>

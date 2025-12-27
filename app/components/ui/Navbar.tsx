@@ -49,10 +49,14 @@ export function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group">
                         <div className={cn(
-                            "p-1.5 rounded-lg transition-colors group-hover:rotate-12",
-                            isTransparent ? "bg-white text-peshwa" : "bg-peshwa text-white"
+                            "relative w-10 h-10 transition-transform group-hover:scale-105",
+                            isTransparent ? "opacity-100" : "opacity-100"
                         )}>
-                            <MapPin size={20} fill="currentColor" />
+                            <img
+                                src="/logo.png"
+                                alt="Visit Pune Logo"
+                                className="object-contain w-full h-full drop-shadow-md"
+                            />
                         </div>
                         <span className={cn(
                             "font-bold text-xl tracking-tight transition-colors",
