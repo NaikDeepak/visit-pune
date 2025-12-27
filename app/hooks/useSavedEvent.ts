@@ -12,6 +12,7 @@ export function useSavedEvent(eventId: string) {
             try {
                 const plans = JSON.parse(saved);
                 if (Array.isArray(plans) && plans.includes(eventId)) {
+                    // eslint-disable-next-line react-hooks/set-state-in-effect
                     setIsSaved(true);
                 }
             } catch {

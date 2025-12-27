@@ -11,7 +11,7 @@ interface EventsGridProps {
     initialCursor?: string;
 }
 
-import { motion, Variants, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function EventsGrid({ initialEvents, initialCursor }: EventsGridProps) {
     const [events, setEvents] = useState(initialEvents);

@@ -10,14 +10,20 @@ export interface FetchEventsResult {
     nextCursor?: string;
 }
 
+interface CursorData {
+    s: number;
+    t: number;
+    i: string;
+}
+
 /**
  * Encodes a composite cursor for stable pagination across sorted/sponsored results.
  */
-function encodeCursor(event: any): string {
-    const cursorData = {
+function encodeCursor(event: EventData & { isSponsored?: boolean, startDateVal: number }): string {
+    const cursorData: CursorData = {
         s: event.isSponsored ? 1 : 0,
         t: event.startDateVal,
-        i: event.id
+        i: event.id || ""
     };
     return Buffer.from(JSON.stringify(cursorData)).toString('base64');
 }
@@ -25,9 +31,9 @@ function encodeCursor(event: any): string {
 /**
  * Decodes a cursor string back into composite values.
  */
-function decodeCursor(cursor: string): { s: number, t: number, i: string } | null {
+function decodeCursor(cursor: string): CursorData | null {
     try {
-        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
+        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8')) as CursorData;
         return {
             s: Number(decoded.s),
             t: Number(decoded.t),
@@ -80,8 +86,9 @@ export async function fetchEventsFromFirestore(cursor?: string): Promise<FetchEv
         try {
             snapshot = await fetchWithQuery(true);
             usedComposite = true;
-        } catch (error: any) {
-            if (error.code === 9 || error.message?.includes("FAILED_PRECONDITION")) {
+        } catch (error: unknown) {
+            const err = error as { code?: number, message?: string };
+            if (err.code === 9 || err.message?.includes("FAILED_PRECONDITION")) {
                 console.warn("⚠️ [PERFORMANCE] Missing Index for composite pagination. Falling back to in-memory.");
                 snapshot = await fetchWithQuery(false);
             } else {

@@ -1,0 +1,42 @@
+kind: "AppHostingYaml"
+apiVersion: "v1"
+
+runConfig:
+  region: "us-central1"
+
+# Public Environment Variables (Safe for plain text / GitHub)
+env:
+  - variable: "NEXT_PUBLIC_BASE_URL"
+    value: "https://visitpune.in"
+  - variable: "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+    value: ""
+  - variable: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
+    value: ".com"
+  - variable: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
+    value: ".app"
+  - variable: "NEXT_PUBLIC_FIREBASE_API_KEY"
+    value: ""
+  - variable: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
+    value: ""
+  - variable: "NEXT_PUBLIC_FIREBASE_APP_ID"
+    value: "1::web:"
+  - variable: "NEXT_PUBLIC_MAPBOX_TOKEN"
+    value: "pk.."
+
+# Secrets (Managed in Firebase Console -> App Hosting Settings)
+# The 'secret' field should contain the NAME of the secret, not its value.
+secrets:
+  - variable: "SERPAPI_KEY"
+    secret: "SERPAPI_KEY"
+  - variable: "API_KEY" 
+    secret: "GEMINI_API_KEY"
+  - variable: "GEMINI_API_KEY"
+    secret: "GEMINI_API_KEY"
+  - variable: "FIREBASE_PRIVATE_KEY"
+    secret: "FIREBASE_PRIVATE_KEY"
+  - variable: "FIREBASE_CLIENT_EMAIL"
+    secret: "FIREBASE_CLIENT_EMAIL"
+  - variable: "CRON_SECRET"
+    secret: "CRON_SECRET"
+  - variable: "ELEVENLABS_API_KEY"
+    secret: "ELEVENLABS_API_KEY"
