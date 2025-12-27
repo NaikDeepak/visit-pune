@@ -106,11 +106,22 @@ export default function AdminEventsPage() {
     };
 
     const handleToggle = async (id: string, field: 'isActive' | 'isSponsored' | 'isHighlighted', current: boolean) => {
-        // Optimistic
+        // Optimistic update
+        const previousEvents = [...events];
         setEvents(prev => prev.map(e => e.id === id ? { ...e, [field]: !current } : e));
 
-        await toggleEventStatus(id, field, current);
-        // Silent fail handling could go here (revert if error)
+        try {
+            const result = await toggleEventStatus(id, field, current);
+            if (!result.success) {
+                // Revert on server failure
+                setEvents(previousEvents);
+                console.error("Toggle failed on server:", result.error);
+            }
+        } catch (error) {
+            // Revert on network/unexpected error
+            setEvents(previousEvents);
+            console.error("Toggle failed:", error);
+        }
     };
 
     if (!user) {
