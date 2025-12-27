@@ -8,7 +8,7 @@ export default function PlannerPage() {
 
             {/* Premium Header */}
             <div className="pt-32 pb-12 bg-peshwa/5 px-6 relative overflow-hidden">
-                <div className="absolute inset-0 opacity-[0.03] bg-[url('/public/cubes.png')] mix-blend-multiply"></div>
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('/cubes.png')] mix-blend-multiply"></div>
                 <div className="container mx-auto text-center relative z-10">
                     <div className="inline-block px-3 py-1 mb-4 rounded-full bg-peshwa/10 text-peshwa text-xs font-bold uppercase tracking-widest border border-peshwa/20">
                         AI Powered

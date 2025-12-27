@@ -37,7 +37,7 @@ export default async function ExplorePage({
             {/* Header with Pattern */}
             <div className="pt-32 pb-6 bg-peshwa/5 px-6 relative overflow-hidden">
                 {/* Subtle Texture Overlay */}
-                <div className="absolute inset-0 opacity-[0.03] bg-[url('/public/cubes.png')] mix-blend-multiply"></div>
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('/cubes.png')] mix-blend-multiply"></div>
 
                 <div className="container mx-auto text-center relative z-10">
                     <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">
