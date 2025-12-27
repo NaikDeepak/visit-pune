@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth } from "@/app/lib/firebase-admin";
 
+import { isAuthorizedAdmin } from "@/app/lib/admin-config";
+
 export async function POST(request: NextRequest) {
     try {
         const { idToken } = await request.json();
@@ -16,8 +18,8 @@ export async function POST(request: NextRequest) {
         const adminAuth = getAdminAuth();
         const decodedToken = await adminAuth.verifyIdToken(idToken);
 
-        // Authorization Check: Hardcoded admin email for now
-        if (decodedToken.email !== "deep.naik@gmail.com") {
+        // Authorization Check
+        if (!isAuthorizedAdmin(decodedToken.email)) {
             return NextResponse.json({ error: "Unauthorized email" }, { status: 401 });
         }
 

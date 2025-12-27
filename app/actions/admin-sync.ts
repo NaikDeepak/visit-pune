@@ -2,14 +2,33 @@
 
 import { syncEventsService } from "@/app/lib/sync-service";
 
-export async function triggerManualSync(userId: string) {
+import { cookies } from "next/headers";
+import { getAdminAuth } from "@/app/lib/firebase-admin";
+
+import { isAuthorizedAdmin } from "@/app/lib/admin-config";
+
+export async function triggerManualSync(forceImageResync: boolean = false) {
     try {
-        // Basic authorization check - mostly relying on Middleware/Layout protection
-        // But helpful to log WHO triggered it
-        const triggeredBy = `user_${userId}`; // In real app, verify admin claim here
+        // Secure server-side verification
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get("__session")?.value;
+
+        if (!sessionCookie) {
+            throw new Error("Unauthorized: No session token found");
+        }
+
+        const decodedClaims = await getAdminAuth().verifySessionCookie(sessionCookie, true);
+
+        // Strict Admin Check
+        if (!isAuthorizedAdmin(decodedClaims.email)) {
+            throw new Error("Unauthorized: Insufficient permissions");
+        }
+
+        // Use verified identity for logging
+        const triggeredBy = `admin_${decodedClaims.email}`;
 
         // Call the service
-        const result = await syncEventsService(triggeredBy);
+        const result = await syncEventsService(triggeredBy, forceImageResync);
         return result;
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";

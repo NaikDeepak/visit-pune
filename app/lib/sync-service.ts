@@ -1,5 +1,5 @@
 import "server-only";
-import { getAdminDb } from "@/app/lib/firebase-admin";
+import { getAdminDb, getAdminStorage } from "@/app/lib/firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
 import * as chrono from "chrono-node";
 import { fetchHighResImage } from "./image-util";
@@ -32,7 +32,46 @@ interface SerpApiEvent {
     };
 }
 
-export async function syncEventsService(triggeredBy: string) {
+/**
+ * Downloads an external image and uploads it to Firebase Storage for persistence and security.
+ */
+async function uploadImageToStorage(imageUrl: string, docId: string): Promise<string | null> {
+    try {
+        const response = await fetch(imageUrl, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+        });
+        if (!response.ok) return null;
+
+        const buffer = await response.arrayBuffer();
+        const storage = getAdminStorage();
+        const bucket = storage.bucket();
+        const file = bucket.file(`event-images/${docId}.jpg`);
+
+        await file.save(Buffer.from(buffer), {
+            metadata: {
+                contentType: 'image/jpeg',
+                metadata: {
+                    sourceUrl: imageUrl,
+                    syncedAt: new Date().toISOString()
+                }
+            },
+            public: true, // Make it public so alt=media works without auth
+            resumable: false
+        });
+
+        const bucketName = bucket.name;
+        // Direct Google Storage Public URL is more reliable for 'public: true' files
+        // and doesn't require Firebase Security Rules to be configured for public read.
+        return `https://storage.googleapis.com/${bucketName}/event-images/${docId}.jpg`;
+    } catch (error) {
+        console.error("Failed to persist image to internal storage", { imageUrl, docId, error });
+        return null;
+    }
+}
+
+export async function syncEventsService(triggeredBy: string, forceImageResync: boolean = false) {
     const db = getAdminDb();
     const stats: SyncStats = { added: 0, updated: 0, removed: 0, skipped: 0 };
     const logId = db.collection("sync_logs").doc().id;
@@ -75,21 +114,25 @@ export async function syncEventsService(triggeredBy: string) {
 
             start += 10; // Default page size for Google Events is typically 10
 
-            // Safety break just in case
-            if (start > 200) break;
+            // Safety break just in case - align with LIMIT to avoid excessive pagination
+            if (start >= 150) break;
         }
 
         const results = allEvents.slice(0, LIMIT); // Ensure strict cap
         console.info(`Total events fetched: ${results.length}`);
 
         // 2. Scalable Cleanup Past Events (Batched)
+        // 2. Scalable Cleanup Past Events (Batched)
         const now = new Date();
-        const pastEventsRef = db.collection("events")
+        const pastEventsQuery = () => db.collection("events")
             .where("startDate", "<", Timestamp.fromDate(now))
-            .limit(500); // Process in chunks of 500
+            .limit(500);
 
-        while (true) {
-            const snapshot = await pastEventsRef.get();
+        let loops = 0;
+        const MAX_LOOPS = 20; // Safety cap: 10,000 events max per sync run
+
+        while (loops < MAX_LOOPS) {
+            const snapshot = await pastEventsQuery().get();
             if (snapshot.empty) break;
 
             const batch = db.batch();
@@ -99,53 +142,94 @@ export async function syncEventsService(triggeredBy: string) {
             });
             await batch.commit();
             console.info(`Cleaned up ${snapshot.size} past events.`);
+            loops++;
+        }
+
+        if (loops >= MAX_LOOPS) {
+            console.warn("⚠️ Cleanup reached MAX_LOOPS. Some past events may still remain.");
         }
 
 
         // 3. Process & Write New Events
         const batch = db.batch();
 
+        // Pre-compute IDs and References for Batch Read
+        const eventIdMap = new Map<string, SerpApiEvent>();
+        const documentRefs: FirebaseFirestore.DocumentReference[] = [];
+
+        // First pass: Generate IDs and collect references
         for (const event of results) {
-            // Generate Dedup ID
-            // Ideally we use a stable ID from source. SerpApi doesn't always strictly guarantee one, 
-            // but link + title is a decent proxy.
             const idString = `${event.title}-${event.date?.start_date}`;
             const docId = Buffer.from(idString).toString('base64').replace(/[+/=]/g, '');
+            eventIdMap.set(docId, event);
+            documentRefs.push(db.collection("events").doc(docId));
+        }
 
+        // Batch Read: Fetch all snapshots in one go (N+1 fix)
+        // db.getAll() is efficient for this
+        const snapshots = await db.getAll(...documentRefs);
+        const snapshotMap = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+        snapshots.forEach(snap => snapshotMap.set(snap.id, snap));
+
+        // Second pass: Process logic using in-memory snapshots with CONCURRENCY CONTROL
+        const entries = Array.from(eventIdMap.entries());
+        const CONCURRENCY_LIMIT = 5; // Process 5 events in parallel to speed up image fetching
+
+        const processEvent = async (docId: string, event: SerpApiEvent) => {
             const eventRef = db.collection("events").doc(docId);
-            const docSnap = await eventRef.get();
+            const docSnap = snapshotMap.get(docId); // Instant access
 
             // High-Res Image Logic
-            // Prioritize 'image' over 'thumbnail' as it is often higher quality in SerpApi
-            let imageUrl = event.image || event.thumbnail || "";
+            // Priority: Scraped high-res (og:image) > SerpApi 'image' > SerpApi 'thumbnail'
+            let imageUrl = "";
 
-            if (imageUrl) {
-                // If it's a low-res Google thumbnail (encrypted-tbn0), try to scrape the source
-                if (imageUrl.includes("encrypted-tbn0") && event.link) {
-                    // Only fetch if we have a valid link
-                    const scrapedImage = await fetchHighResImage(event.link);
-                    if (scrapedImage) {
-                        // Debug level is better for item-level details
-                        // console.debug(`Upgraded image for ${event.title.substring(0, 15)}...`);
-                        imageUrl = scrapedImage;
+            if (event.link) {
+                // Aggressively attempt to scrape the source for the best possible image
+                const scrapedImage = await fetchHighResImage(event.link);
+                if (scrapedImage) {
+                    imageUrl = scrapedImage;
+                    // console.debug(`[SYNC] Scraped high-res image for: ${event.title}`);
+                }
+            }
+
+            // Fallback to SerpApi images if scraping failed or wasn't possible
+            if (!imageUrl) {
+                imageUrl = event.image || event.thumbnail || "";
+
+                if (imageUrl) {
+                    try {
+                        // 1. Handle lh3/lh5/googleusercontent (Resizing allowed)
+                        if (imageUrl.includes("googleusercontent.com") || imageUrl.includes("=w")) {
+                            if (imageUrl.match(/=w\d+/)) {
+                                imageUrl = imageUrl.replace(/=w\d+(-h\d+)?/, "=w1080-h1080");
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Image URL normalization failed", { imageUrl, error });
                     }
                 }
+            }
 
-                try {
-                    // 1. Handle lh3/lh5/googleusercontent (Resizing allowed)
-                    if (imageUrl.includes("googleusercontent.com") || imageUrl.includes("=w")) {
-                        // Replace existing size params or append if missing
-                        if (imageUrl.match(/=w\d+/)) {
-                            imageUrl = imageUrl.replace(/=w\d+(-h\d+)?/, "=w1080-h1080");
-                        }
+            // Persistence Loop
+            if (imageUrl) {
+                const data = docSnap?.exists ? docSnap.data() : null;
+                const currentThumbnail = data ? (data as { thumbnail?: string }).thumbnail : null;
+                const isAlreadyPersistent = currentThumbnail?.includes("firebasestorage.googleapis.com");
+
+                // If user requested fresh start (forceImageResync) OR the document hasn't been persisted yet
+                if (forceImageResync || !isAlreadyPersistent) {
+                    const persistentUrl = await uploadImageToStorage(imageUrl, docId);
+                    if (persistentUrl) {
+                        imageUrl = persistentUrl;
                     }
-                } catch {
-                    // Ignore logic failure
+                } else {
+                    // Reuse existing persistent thumbnail if it exists
+                    imageUrl = currentThumbnail || "";
                 }
             }
 
             // Robust Date Parsing with Chrono
-            let startDate = new Date(); // Default fallback
+            let startDate: Date | null = null;
             const now = new Date();
 
             // SerpApi date object usually has `start_date` like "Jan 14"
@@ -160,13 +244,18 @@ export async function syncEventsService(triggeredBy: string) {
                 }
             }
 
+            // Fallback: If date is missing or invalid, default to tomorrow to ensure it passes the "past event" check
+            if (!startDate) {
+                startDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Now + 24h
+            }
+
             // FILTER: If event is in the past, skip/mark inactive
             // Safest: If startDate is before 'now' (minus small buffer), don't add as active.
             if (startDate < now) {
                 // Debug log
                 // console.debug(`Skipping past event: ${event.title} (${startDate.toISOString()})`);
                 stats.skipped++;
-                continue;
+                return;
             }
 
             // Debug Log
@@ -189,7 +278,7 @@ export async function syncEventsService(triggeredBy: string) {
                 }
             };
 
-            if (docSnap.exists) {
+            if (docSnap && docSnap.exists) {
                 // Update - preserve existing flags if present, otherwise default
                 const currentData = docSnap.data();
                 batch.update(eventRef, {
@@ -210,6 +299,12 @@ export async function syncEventsService(triggeredBy: string) {
                 });
                 stats.added++;
             }
+        };
+
+        // Execute in Chunks
+        for (let i = 0; i < entries.length; i += CONCURRENCY_LIMIT) {
+            const chunk = entries.slice(i, i + CONCURRENCY_LIMIT);
+            await Promise.all(chunk.map(([docId, event]) => processEvent(docId, event)));
         }
 
         await batch.commit();

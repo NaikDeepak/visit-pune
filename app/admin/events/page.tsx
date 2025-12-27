@@ -46,6 +46,7 @@ export default function AdminEventsPage() {
     // Events State
     const [events, setEvents] = useState<AdminEvent[]>([]);
     const [loadingEvents, setLoadingEvents] = useState(false);
+    const [forceImageResync, setForceImageResync] = useState(false);
 
     // Initial Load
     useEffect(() => {
@@ -92,7 +93,7 @@ export default function AdminEventsPage() {
         if (!user) return;
         setSyncing(true);
         try {
-            await triggerManualSync(user.uid);
+            await triggerManualSync(forceImageResync);
             setTimeout(() => {
                 refreshLogs();
                 refreshEvents(); // Also refresh events as sync adds new ones
@@ -141,19 +142,35 @@ export default function AdminEventsPage() {
             </div>
 
             {/* Sync Control (Always Visible) */}
-            <div className="bg-card border border-border rounded-xl p-6 mb-8 flex items-center justify-between shadow-sm">
-                <div>
+            <div className="bg-card border border-border rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                <div className="flex-1">
                     <h3 className="font-bold text-lg">Google Events Sync</h3>
-                    <p className="text-sm text-muted-foreground">Fetch latest ~100 events from SerpApi.</p>
+                    <p className="text-sm text-muted-foreground mb-4 md:mb-0">Fetch latest ~100 events and persist high-quality images to Storage.</p>
                 </div>
-                <button
-                    onClick={handleSync}
-                    disabled={syncing}
-                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-lg font-bold disabled:opacity-50 transition-all active:scale-95"
-                >
-                    {syncing ? <Loader2 className="animate-spin" /> : <RefreshCw size={18} />}
-                    {syncing ? "Syncing..." : "Run Sync Job"}
-                </button>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
+                    <label className="flex items-center gap-3 cursor-pointer group whitespace-nowrap bg-muted/30 px-4 py-2 rounded-lg border border-transparent hover:border-primary/20 transition-all">
+                        <input
+                            type="checkbox"
+                            checked={forceImageResync}
+                            onChange={(e) => setForceImageResync(e.target.checked)}
+                            className="w-5 h-5 text-primary border-border rounded focus:ring-primary/20 transition-all"
+                        />
+                        <div className="flex flex-col">
+                            <span className="text-sm font-bold group-hover:text-primary transition-colors">Force Image Refresh</span>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest leading-none">High-Res Priority</span>
+                        </div>
+                    </label>
+
+                    <button
+                        onClick={handleSync}
+                        disabled={syncing}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-xl font-black shadow-lg shadow-primary/20 disabled:opacity-50 transition-all active:scale-95"
+                    >
+                        {syncing ? <Loader2 className="animate-spin" /> : <RefreshCw size={18} className="font-bold" />}
+                        {syncing ? "Syncing..." : "Run Sync Job"}
+                    </button>
+                </div>
             </div>
 
             {activeTab === 'events' && (

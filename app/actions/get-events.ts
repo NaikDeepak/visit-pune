@@ -58,7 +58,7 @@ const FALLBACK_EVENTS: EventData[] = [
         }
     },
     {
-        title: " NH7 Weekender Pune",
+        title: "NH7 Weekender Pune",
         date: {
             start_date: "Nov 25",
             when: "Fri, Nov 25 – Sun, Nov 27"

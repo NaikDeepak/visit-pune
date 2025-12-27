@@ -3,7 +3,14 @@ import { syncEventsService } from "@/app/lib/sync-service";
 
 export async function GET(request: NextRequest) {
     const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+
+    // Explicitly check for misconfigured secret
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+        return new NextResponse("Server configuration error: CRON_SECRET not set", { status: 500 });
+    }
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 

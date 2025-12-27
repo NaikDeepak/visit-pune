@@ -6,17 +6,35 @@ export function useSavedEvent(eventId: string) {
     const [isSaved, setIsSaved] = useState(false);
 
     useEffect(() => {
-        // Check local storage on mount
+        // Sync with localStorage on mount (Client-side only)
         const saved = localStorage.getItem("myPlans");
         if (saved) {
-            const plans = JSON.parse(saved);
-            setIsSaved(plans.includes(eventId));
+            try {
+                const plans = JSON.parse(saved);
+                if (Array.isArray(plans) && plans.includes(eventId)) {
+                    setIsSaved(true);
+                }
+            } catch {
+                // Ignore parse errors
+            }
         }
     }, [eventId]);
 
     const toggleSave = () => {
         const saved = localStorage.getItem("myPlans");
-        let plans: string[] = saved ? JSON.parse(saved) : [];
+        let plans: string[] = [];
+
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    plans = parsed;
+                }
+            } catch {
+                // If data is corrupted, clear it and start fresh
+                localStorage.removeItem("myPlans");
+            }
+        }
 
         if (plans.includes(eventId)) {
             plans = plans.filter((id) => id !== eventId);
@@ -26,9 +44,19 @@ export function useSavedEvent(eventId: string) {
             setIsSaved(true);
         }
 
-        localStorage.setItem("myPlans", JSON.stringify(plans));
-        // Dispatch custom event so unrelated components (Navbar) can update count
-        window.dispatchEvent(new Event("storage"));
+        const newValue = JSON.stringify(plans);
+        localStorage.setItem("myPlans", newValue);
+
+        // Dispatch a StorageEvent so unrelated components (Navbar) can update count
+        window.dispatchEvent(
+            new StorageEvent("storage", {
+                key: "myPlans",
+                oldValue: saved,
+                newValue,
+                storageArea: localStorage,
+                url: window.location.href,
+            }),
+        );
         return !isSaved; // Return new state
     };
 

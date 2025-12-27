@@ -1,10 +1,31 @@
 "use server";
 
-import { getAdminDb } from "@/app/lib/firebase-admin";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { getAdminDb, getAdminAuth } from "@/app/lib/firebase-admin";
+
+import { isAuthorizedAdmin } from "@/app/lib/admin-config";
+
+async function verifyAdmin() {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("__session")?.value;
+
+    if (!sessionCookie) {
+        throw new Error("Unauthorized: No session token found");
+    }
+
+    const decodedClaims = await getAdminAuth().verifySessionCookie(sessionCookie, true);
+
+    if (!isAuthorizedAdmin(decodedClaims.email)) {
+        throw new Error("Unauthorized: Insufficient permissions");
+    }
+    return decodedClaims;
+}
 
 export async function toggleEventStatus(eventId: string, field: 'isActive' | 'isSponsored' | 'isHighlighted', currentValue: boolean) {
     try {
+        await verifyAdmin();
+
         const db = getAdminDb();
         await db.collection("events").doc(eventId).update({
             [field]: !currentValue
@@ -21,17 +42,17 @@ export async function toggleEventStatus(eventId: string, field: 'isActive' | 'is
 
 export async function fetchAdminEvents() {
     try {
+        await verifyAdmin(); // Secure read access
+
         const db = getAdminDb();
-        const now = new Date();
         // Fetch future events for management
         // We might want past ones too, but for cleanliness let's stick to future or recent
         const snapshot = await db.collection("events")
-            //.where("startDate", ">=", new Date(now.setDate(now.getDate() - 1))) // Show recent + future
             .orderBy("startDate", "asc")
             .limit(300) // Increase limit
             .get();
 
-        return snapshot.docs.map(doc => {
+        return snapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
             const data = doc.data();
             return {
                 id: doc.id,

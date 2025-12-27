@@ -2,6 +2,7 @@ import "server-only";
 import { initializeApp, getApps, getApp, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 
 // You should store these secrets in environment variables in production
 // For development/mocking purposes, we might need a dummy service account or proper env vars
@@ -28,6 +29,7 @@ function getFirebaseAdminApp() {
 
     return initializeApp({
         credential: cert(serviceAccount),
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebasestorage.app`
     });
 }
 
@@ -40,4 +42,9 @@ export const getAdminAuth = () => {
 export const getAdminDb = () => {
     const app = getFirebaseAdminApp();
     return getFirestore(app);
+}
+
+export const getAdminStorage = () => {
+    const app = getFirebaseAdminApp();
+    return getStorage(app);
 }
