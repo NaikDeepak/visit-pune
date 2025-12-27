@@ -159,7 +159,8 @@ export async function syncEventsService(triggeredBy: string, forceImageResync: b
 
         // First pass: Generate IDs and collect references
         for (const event of results) {
-            const idString = `${event.title}-${event.date?.start_date}`;
+            // A stable link is the best unique identifier. Fallback to title + full date string.
+            const idString = event.link || `${event.title}-${event.date?.when}`;
             const docId = Buffer.from(idString).toString('base64').replace(/[+/=]/g, '');
             eventIdMap.set(docId, event);
             documentRefs.push(db.collection("events").doc(docId));
