@@ -21,6 +21,8 @@ export function useSavedEvent(eventId: string) {
     }, [eventId]);
 
     const toggleSave = () => {
+        if (!eventId) return false;
+
         const saved = localStorage.getItem("myPlans");
         let plans: string[] = [];
 
@@ -36,13 +38,15 @@ export function useSavedEvent(eventId: string) {
             }
         }
 
-        if (plans.includes(eventId)) {
+        const nextIsSaved = !plans.includes(eventId);
+
+        if (!nextIsSaved) {
             plans = plans.filter((id) => id !== eventId);
-            setIsSaved(false);
         } else {
             plans.push(eventId);
-            setIsSaved(true);
         }
+
+        setIsSaved(nextIsSaved);
 
         const newValue = JSON.stringify(plans);
         localStorage.setItem("myPlans", newValue);
@@ -57,7 +61,7 @@ export function useSavedEvent(eventId: string) {
                 url: window.location.href,
             }),
         );
-        return !isSaved; // Return new state
+        return nextIsSaved;
     };
 
     return { isSaved, toggleSave };

@@ -45,19 +45,23 @@ async function uploadImageToStorage(imageUrl: string, docId: string): Promise<st
         if (!response.ok) return null;
 
         const buffer = await response.arrayBuffer();
+        const contentType = response.headers.get("content-type") || "image/jpeg";
         const storage = getAdminStorage();
         const bucket = storage.bucket();
+
+        // We always save with .jpg extension for internal consistency, 
+        // but the metadata reflects the actual source type.
         const file = bucket.file(`event-images/${docId}.jpg`);
 
         await file.save(Buffer.from(buffer), {
             metadata: {
-                contentType: 'image/jpeg',
+                contentType,
                 metadata: {
                     sourceUrl: imageUrl,
                     syncedAt: new Date().toISOString()
                 }
             },
-            public: true, // Make it public so alt=media works without auth
+            predefinedAcl: "publicRead",
             resumable: false
         });
 
@@ -215,7 +219,10 @@ export async function syncEventsService(triggeredBy: string, forceImageResync: b
             if (imageUrl) {
                 const data = docSnap?.exists ? docSnap.data() : null;
                 const currentThumbnail = data ? (data as { thumbnail?: string }).thumbnail : null;
-                const isAlreadyPersistent = currentThumbnail?.includes("firebasestorage.googleapis.com");
+                const isAlreadyPersistent =
+                    typeof currentThumbnail === "string" &&
+                    (currentThumbnail.includes("firebasestorage.googleapis.com") ||
+                        currentThumbnail.includes("storage.googleapis.com"));
 
                 // If user requested fresh start (forceImageResync) OR the document hasn't been persisted yet
                 if (forceImageResync || !isAlreadyPersistent) {
