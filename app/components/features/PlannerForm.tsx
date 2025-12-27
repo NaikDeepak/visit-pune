@@ -8,7 +8,11 @@ import { motion } from "framer-motion";
 
 import { ItineraryMap } from "./ItineraryMap";
 
-export function PlannerForm() {
+interface PlannerFormProps {
+    mapboxToken?: string;
+}
+
+export function PlannerForm(props: PlannerFormProps) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<Itinerary | null>(null);
     const [selectedVibe, setSelectedVibe] = useState("mixed");
@@ -261,6 +265,7 @@ export function PlannerForm() {
                                     stops={result.stops || []}
                                     selectedStopIndex={selectedStopIndex}
                                     onMarkerClick={setSelectedStopIndex}
+                                    mapboxToken={props.mapboxToken}
                                 />
                             </div>
                         </div>

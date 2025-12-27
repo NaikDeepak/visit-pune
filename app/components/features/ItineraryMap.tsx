@@ -19,7 +19,7 @@ const INITIAL_VIEW_STATE = {
     zoom: 12
 };
 
-export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick }: Props) {
+export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick, mapboxToken }: Props & { mapboxToken?: string }) {
     const mapRef = useRef<MapRef>(null);
     const hasInitiallyLoaded = useRef(false);
     const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
@@ -54,6 +54,13 @@ export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick }: Props)
         }
     }, [stops]);
 
+    const token = mapboxToken || process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+    if (!token) {
+        console.error("Mapbox token missing");
+        return <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">Mapbox Token Missing</div>;
+    }
+
     return (
         <div className="w-full h-full rounded-3xl overflow-hidden border border-border shadow-2xl relative">
             <Map
@@ -62,7 +69,7 @@ export function ItineraryMap({ stops, selectedStopIndex, onMarkerClick }: Props)
                 onMove={(evt) => setViewState(evt.viewState)}
                 style={{ width: "100%", height: "100%" }}
                 mapStyle="mapbox://styles/mapbox/dark-v11"
-                mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                mapboxAccessToken={token}
             >
                 {stops.map((stop, index) => (
                     <Marker
