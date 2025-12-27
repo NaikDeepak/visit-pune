@@ -30,7 +30,5 @@ env:
     secret: FB_PRIVATE_KEY
   - variable: CRON_SECRET
     secret: CRON_SECRET
-  - variable: ELEVENLABS_API_KEY
-    secret: ELEVENLABS_API_KEY
   - variable: MAPBOX_TOKEN
     secret: MAPBOX_TOKEN
