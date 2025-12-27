@@ -12,18 +12,18 @@ function getFirebaseAdminApp() {
         return getApp();
     }
 
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY
-        ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    const privateKey = process.env.FB_PRIVATE_KEY
+        ? process.env.FB_PRIVATE_KEY.replace(/\\n/g, '\n')
         : undefined;
 
     // Only initialize if we have credentials, otherwise throw or mock in dev
     if (!privateKey) {
-        throw new Error("Missing FIREBASE_PRIVATE_KEY. Cannot initialize Firebase Admin.");
+        throw new Error("Missing FB_PRIVATE_KEY. Cannot initialize Firebase Admin.");
     }
 
     const serviceAccount = {
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        clientEmail: process.env.FB_CLIENT_EMAIL,
         privateKey: privateKey,
     };
 
