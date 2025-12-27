@@ -59,125 +59,47 @@ export async function fetchEventsFromFirestore(cursor?: string): Promise<FetchEv
         const PAGE_SIZE = 24;
         const decoded = cursor ? decodeCursor(cursor) : null;
 
-        const fetchWithQuery = async (useCompositeIndex: boolean) => {
-            let query = db.collection("events") as FirebaseFirestore.Query;
+        let query = db.collection("events")
+            .where("isActive", "==", true)
+            .orderBy("isSponsored", "desc")
+            .orderBy("startDate", "asc")
+            .orderBy(FieldPath.documentId(), "asc");
 
-            if (useCompositeIndex) {
-                // SCALABLE QUERY (Requires Index)
-                // Index: isActive (ASC), isSponsored (DESC), startDate (ASC), __name__ (ASC)
-                query = query
-                    .where("isActive", "==", true)
-                    .orderBy("isSponsored", "desc")
-                    .orderBy("startDate", "asc")
-                    .orderBy(FieldPath.documentId(), "asc");
-
-                if (decoded) {
-                    query = query.startAfter(
-                        decoded.s === 1,
-                        Timestamp.fromMillis(decoded.t),
-                        decoded.i
-                    );
-                }
-
-                query = query.limit(PAGE_SIZE);
-            } else {
-                // FALLBACK QUERY (No Index needed)
-                // We fetch a larger batch and handle ordering/cursor in memory
-                query = query.orderBy("startDate", "asc").limit(500);
-            }
-
-            return query.get();
-        };
-
-        let snapshot: FirebaseFirestore.QuerySnapshot;
-        let usedComposite = false;
-
-        try {
-            snapshot = await fetchWithQuery(true);
-            usedComposite = true;
-        } catch (error: unknown) {
-            const err = error as { code?: number, message?: string };
-            if (err.code === 9 || err.message?.includes("FAILED_PRECONDITION")) {
-                console.warn("⚠️ [PERFORMANCE] Missing Index for composite pagination. Falling back to in-memory.");
-                snapshot = await fetchWithQuery(false);
-            } else {
-                throw error;
-            }
+        if (decoded) {
+            query = query.startAfter(
+                decoded.s === 1,
+                Timestamp.fromMillis(decoded.t),
+                decoded.i
+            );
         }
 
-        const allFetchedEvents = snapshot.docs.map(doc => {
-            const data = doc.data() as {
-                title?: string;
-                description?: string;
-                link?: string;
-                thumbnail?: string;
-                address?: unknown;
-                venue?: string;
-                dateDisplay?: string;
-                startDate?: Timestamp;
-                isActive?: boolean;
-                isSponsored?: boolean;
-            };
+        const snapshot = await query.limit(PAGE_SIZE).get();
 
-            const startDate = data.startDate;
-            if (!startDate || typeof (startDate as unknown as Record<string, unknown>).toDate !== "function") {
-                return null;
-            }
+        const cleanedEvents = snapshot.docs.map(doc => {
+            const data = doc.data() as Record<string, unknown>;
+
+            // We use standard coercion but trust the Sync path has normalized these.
+            // This mapping layer exists purely to transform Firestore Docs -> Frontend Props.
+            const startDate = data.startDate as Timestamp;
 
             return {
                 id: doc.id,
-                title: data.title || "Untitled Event",
-                description: data.description || "",
-                link: data.link || "#",
-                thumbnail: data.thumbnail || "",
-                address: Array.isArray(data.address) ? data.address : (data.address ? [String(data.address)] : []),
-                venue: { name: data.venue || "" },
+                title: String(data.title || "Untitled"),
+                description: String(data.description || ""),
+                link: String(data.link || "#"),
+                thumbnail: String(data.thumbnail || ""),
+                address: Array.isArray(data.address) ? data.address : [],
+                venue: { name: String(data.venue || "") },
                 date: {
-                    start_date: data.dateDisplay || startDate.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
-                    when: data.dateDisplay
+                    start_date: data.dateDisplay ? String(data.dateDisplay) : startDate.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+                    when: data.dateDisplay ? String(data.dateDisplay) : undefined
                 },
                 startDateVal: startDate.toMillis(),
-                isActive: data.isActive ?? true,
-                isSponsored: data.isSponsored ?? false
-            };
-        }).filter((e): e is NonNullable<typeof e> => e !== null);
+            } as EventData & { startDateVal: number };
+        });
 
-        let sortedEvents = allFetchedEvents;
-
-        if (!usedComposite) {
-            // Manual Sort: Sponsored first, then Date, then ID
-            sortedEvents = allFetchedEvents
-                .filter(e => e.isActive === true)
-                .sort((a, b) => {
-                    if (a.isSponsored && !b.isSponsored) return -1;
-                    if (!a.isSponsored && b.isSponsored) return 1;
-                    if (a.startDateVal !== b.startDateVal) return a.startDateVal - b.startDateVal;
-                    return a.id.localeCompare(b.id);
-                });
-
-            // Manual Slicing based on cursor
-            if (decoded) {
-                const lastIndex = sortedEvents.findIndex(e =>
-                    e.id === decoded.i &&
-                    e.startDateVal === decoded.t &&
-                    (e.isSponsored ? 1 : 0) === decoded.s
-                );
-                if (lastIndex !== -1) {
-                    sortedEvents = sortedEvents.slice(lastIndex + 1);
-                }
-            }
-            sortedEvents = sortedEvents.slice(0, PAGE_SIZE);
-        }
-
-        // Cleanup and generate next cursor
-        const cleanedEvents = sortedEvents.map(e => ({
-            ...e,
-            isActive: undefined,
-            isSponsored: undefined
-        } as EventData & { startDateVal: number }));
-
-        const nextCursor = sortedEvents.length === PAGE_SIZE
-            ? encodeCursor(sortedEvents[sortedEvents.length - 1])
+        const nextCursor = snapshot.docs.length === PAGE_SIZE
+            ? encodeCursor(snapshot.docs[snapshot.docs.length - 1].data() as unknown as (EventData & { isSponsored?: boolean, startDateVal: number }))
             : undefined;
 
         return { events: cleanedEvents, nextCursor };
