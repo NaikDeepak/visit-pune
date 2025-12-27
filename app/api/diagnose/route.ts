@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/app/lib/firebase-admin";
 import { ai } from "@/app/lib/gemini";
+import { FieldPath } from "firebase-admin/firestore";
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,8 @@ export async function GET() {
     // Test Firestore (Complex Query - Tests Indexes)
     try {
         const db = getAdminDb();
-        const { FieldPath } = require("firebase-admin/firestore");
+
+        // Exact query from get-firestore-events.ts
 
         // Exact query from get-firestore-events.ts
         const snapshot = await db.collection("events")
