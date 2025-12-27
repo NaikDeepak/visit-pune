@@ -20,10 +20,13 @@ interface CursorData {
  * Encodes a composite cursor for stable pagination across sorted/sponsored results.
  */
 function encodeCursor(event: EventData & { isSponsored?: boolean, startDateVal: number }): string {
+    if (!event.id) {
+        throw new Error("Cannot encode cursor: missing event id");
+    }
     const cursorData: CursorData = {
         s: event.isSponsored ? 1 : 0,
         t: event.startDateVal,
-        i: event.id || ""
+        i: event.id
     };
     return Buffer.from(JSON.stringify(cursorData)).toString('base64');
 }
@@ -33,12 +36,16 @@ function encodeCursor(event: EventData & { isSponsored?: boolean, startDateVal: 
  */
 function decodeCursor(cursor: string): CursorData | null {
     try {
-        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8')) as CursorData;
-        return {
-            s: Number(decoded.s),
-            t: Number(decoded.t),
-            i: String(decoded.i)
-        };
+        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
+        if (
+            typeof decoded === 'object' && decoded !== null &&
+            typeof decoded.s === 'number' &&
+            typeof decoded.t === 'number' &&
+            typeof decoded.i === 'string'
+        ) {
+            return decoded as CursorData;
+        }
+        return null;
     } catch {
         return null;
     }
@@ -97,15 +104,26 @@ export async function fetchEventsFromFirestore(cursor?: string): Promise<FetchEv
         }
 
         const allFetchedEvents = snapshot.docs.map(doc => {
-            const data = doc.data();
+            const data = doc.data() as {
+                title: string;
+                description: string;
+                link: string;
+                thumbnail: string;
+                address: string;
+                venue: string;
+                dateDisplay?: string;
+                startDate: Timestamp;
+                isActive?: boolean;
+                isSponsored?: boolean;
+            };
             return {
                 id: doc.id,
                 title: data.title,
                 description: data.description,
                 link: data.link,
                 thumbnail: data.thumbnail,
-                address: data.address,
-                venue: { name: data.venue },
+                address: Array.isArray(data.address) ? data.address : (data.address ? [data.address] : []),
+                venue: { name: data.venue || "" },
                 date: {
                     start_date: data.dateDisplay || data.startDate.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
                     when: data.dateDisplay

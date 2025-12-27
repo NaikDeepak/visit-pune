@@ -28,8 +28,6 @@ env:
 secrets:
   - variable: "SERPAPI_KEY"
     secret: "SERPAPI_KEY"
-  - variable: "API_KEY" 
-    secret: "GEMINI_API_KEY"
   - variable: "GEMINI_API_KEY"
     secret: "GEMINI_API_KEY"
   - variable: "FIREBASE_PRIVATE_KEY"
