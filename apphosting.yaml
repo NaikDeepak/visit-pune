@@ -20,22 +20,17 @@ env:
     value: "177867316098"
   - variable: "NEXT_PUBLIC_FIREBASE_APP_ID"
     value: "1:177867316098:web:c7268ace7c2bbf47714d9b"
-
-
-# Secrets (Managed in Firebase Console -> App Hosting Settings)
-# The 'secret' field should contain the NAME of the secret, not its value.
-secrets:
-  - variable: "SERPAPI_KEY"
-    secret: "SERPAPI_KEY"
-  - variable: "GEMINI_API_KEY"
-    secret: "GEMINI_API_KEY"
-  - variable: "FIREBASE_PRIVATE_KEY"
-    secret: "FIREBASE_PRIVATE_KEY"
-  - variable: "FIREBASE_CLIENT_EMAIL"
-    secret: "FIREBASE_CLIENT_EMAIL"
-  - variable: "CRON_SECRET"
-    secret: "CRON_SECRET"
-  - variable: "ELEVENLABS_API_KEY"
-    secret: "ELEVENLABS_API_KEY"
-  - variable: "MAPBOX_TOKEN"
-    value: "pk.."
+  - variable: SERPAPI_KEY
+    secret: SERPAPI_KEY
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+  - variable: FB_CLIENT_EMAIL
+    secret: FB_CLIENT_EMAIL
+  - variable: FB_PRIVATE_KEY
+    secret: FB_PRIVATE_KEY
+  - variable: CRON_SECRET
+    secret: CRON_SECRET
+  - variable: ELEVENLABS_API_KEY
+    secret: ELEVENLABS_API_KEY
+  - variable: MAPBOX_TOKEN
+    secret: MAPBOX_TOKEN
