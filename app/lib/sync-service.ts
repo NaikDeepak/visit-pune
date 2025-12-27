@@ -297,17 +297,17 @@ export async function syncEventsService(triggeredBy: string, forceImageResync: b
             const currentData = docSnap?.exists ? docSnap.data() as Partial<FirestoreEventDoc> : null;
 
             const eventData: FirestoreEventDoc = {
-                title: event.title || "Untitled Event",
-                description: event.description || "",
-                link: event.link || "",
-                thumbnail: imageUrl,
+                title: event.title || currentData?.title || "Untitled Event",
+                description: event.description ?? currentData?.description ?? "",
+                link: event.link || currentData?.link || "",
+                thumbnail: imageUrl || currentData?.thumbnail || "",
                 address: Array.isArray(event.address)
-                    ? event.address
-                    : (event.address ? [String(event.address)] : []),
-                venue: event.venue?.name || "",
-                dateDisplay: event.date?.when || event.date?.start_date || "",
+                    ? event.address.map(String)
+                    : (event.address ? [String(event.address)] : (currentData?.address ?? [])),
+                venue: event.venue?.name || currentData?.venue || "",
+                dateDisplay: event.date?.when || event.date?.start_date || currentData?.dateDisplay || "",
                 startDate: Timestamp.fromDate(startDate),
-                tags: ["Pune"],
+                tags: currentData?.tags ?? ["Pune"],
                 updatedAt: Timestamp.now(),
                 isActive: currentData?.isActive ?? true,
                 isSponsored: currentData?.isSponsored ?? false,

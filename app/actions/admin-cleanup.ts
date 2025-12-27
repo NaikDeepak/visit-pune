@@ -35,7 +35,7 @@ export async function runGlobalSchemaCleanup() {
         stats.total = snapshot.size;
         console.info(`Starting migration for ${stats.total} documents...`);
 
-        const batch = db.batch();
+        let batch = db.batch(); // Re-assignable
         let batchCount = 0;
 
         for (const doc of snapshot.docs) {
@@ -84,6 +84,7 @@ export async function runGlobalSchemaCleanup() {
             // Firestore Batch limit is 500
             if (batchCount >= 450) {
                 await batch.commit();
+                batch = db.batch(); // Re-initialize
                 batchCount = 0;
             }
         }

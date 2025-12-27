@@ -99,7 +99,21 @@ export async function fetchEventsFromFirestore(cursor?: string): Promise<FetchEv
         });
 
         const nextCursor = snapshot.docs.length === PAGE_SIZE
-            ? encodeCursor(snapshot.docs[snapshot.docs.length - 1].data() as unknown as (EventData & { isSponsored?: boolean, startDateVal: number }))
+            ? (() => {
+                const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+                const lastData = lastDoc.data() as Record<string, unknown>;
+                const lastStartDate = lastData.startDate as Timestamp;
+
+                return encodeCursor({
+                    id: lastDoc.id,
+                    isSponsored: Boolean(lastData.isSponsored),
+                    startDateVal: lastStartDate.toMillis(),
+                    title: "", // Placeholder
+                    date: {}, // Placeholder
+                    address: [], // Placeholder
+                    link: "", // Placeholder
+                });
+            })()
             : undefined;
 
         return { events: cleanedEvents, nextCursor };
